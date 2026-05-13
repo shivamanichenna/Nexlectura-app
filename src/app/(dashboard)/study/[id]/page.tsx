@@ -15,7 +15,7 @@ import {
   Lightbulb, 
   Smile, 
   AlertCircle,
-  Translate,
+  Languages,
   ChevronLeft
 } from "lucide-react"
 import Link from "next/link"
@@ -96,7 +96,7 @@ export default function LecturePlayerPage({ params }: { params: { id: string } }
               onClick={() => setBilingual(!bilingual)}
               className="rounded-full h-9 flex gap-2 font-bold"
             >
-              <Translate className="h-4 w-4" />
+              <Languages className="h-4 w-4" />
               {bilingual ? "Bilingual On" : "English Only"}
             </Button>
           </div>
