@@ -1,5 +1,7 @@
+
 "use client"
 
+import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -9,20 +11,43 @@ import {
   TrendingUp, 
   Clock, 
   Trophy,
-  AlertCircle
+  AlertCircle,
+  Sparkles,
+  Loader2
 } from "lucide-react"
+import { generateDynamicQuiz, type GenerateDynamicQuizOutput } from "@/ai/flows/dynamic-ai-quizzes"
 
 export default function AssessmentsPage() {
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [quizQuestions, setQuizQuestions] = useState<GenerateDynamicQuizOutput | null>(null)
+
+  const handleGenerateQuiz = async () => {
+    setIsGenerating(true)
+    try {
+      const questions = await generateDynamicQuiz({
+        weakTopics: ["Macro-Dynamics", "Inflation calculations"],
+        conceptsToCover: ["CPI vs WPI", "Demand-pull inflation"],
+        numberOfQuestions: 5,
+        language: "English"
+      })
+      setQuizQuestions(questions)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
   const tests = [
     { title: "Macroeconomics Mid-Term", subject: "Economics", questions: 30, time: "45 min", type: "Weekly Mock" },
-    { title: "Introduction to Calculus", subject: "Mathematics", questions: 20, time: "30 min", type: "AI Practice" },
+    { title: "Introduction to Calculus", subject: "Mathematics", questions: 20, time: "30 min", type: "Practice" },
   ]
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-headline font-bold text-secondary">Assessments</h1>
-        <Badge className="bg-primary/10 text-primary border-none rounded-lg py-1 px-3">8.4 CGPA</Badge>
+        <Badge className="bg-primary/10 text-primary border-none rounded-lg py-1 px-3 font-bold">8.4 CGPA</Badge>
       </div>
 
       {/* Readiness Widget */}
@@ -35,7 +60,7 @@ export default function AssessmentsPage() {
                 Exam Readiness
              </div>
              <h2 className="text-3xl font-headline font-bold">78%</h2>
-             <p className="text-white/60 text-sm">You are 12% more prepared than last week. Great progress!</p>
+             <p className="text-white/60 text-sm">You are 12% more prepared than last week.</p>
           </div>
           <div className="h-24 w-24 rounded-full border-8 border-primary/20 flex items-center justify-center">
              <div className="h-full w-full border-t-8 border-primary rounded-full rotate-45 flex items-center justify-center">
@@ -45,12 +70,47 @@ export default function AssessmentsPage() {
         </CardContent>
       </Card>
 
-      {/* Section: Upcoming */}
+      {/* AI Quiz Generator */}
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <h3 className="font-headline font-bold text-lg">Upcoming Tests</h3>
-          <Button variant="link" className="text-primary font-bold">View History</Button>
+          <h3 className="font-headline font-bold text-lg">AI Practice Sets</h3>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleGenerateQuiz}
+            disabled={isGenerating}
+            className="text-primary border-primary rounded-xl font-bold gap-2"
+          >
+            {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            Generate New
+          </Button>
         </div>
+
+        {quizQuestions ? (
+          <div className="space-y-3">
+            {quizQuestions.map((q, idx) => (
+              <Card key={idx} className="rounded-2xl border-none bg-accent/30 p-4">
+                <p className="font-bold text-sm text-secondary mb-3">Q{idx+1}: {q.question}</p>
+                <div className="grid grid-cols-1 gap-2">
+                  {q.options.map((opt, i) => (
+                    <div key={i} className="text-xs p-2 bg-white rounded-lg border border-border">{opt}</div>
+                  ))}
+                </div>
+              </Card>
+            ))}
+            <Button className="w-full rounded-xl h-12 font-bold">Start Practice Quiz</Button>
+          </div>
+        ) : (
+          <div className="p-10 text-center border-2 border-dashed rounded-3xl text-muted-foreground">
+             <Sparkles className="h-10 w-10 mx-auto mb-2 opacity-20" />
+             <p className="text-sm font-medium">Click "Generate New" to get a personalized AI test based on your weak topics.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Upcoming Tests */}
+      <div className="space-y-4 pt-4">
+        <h3 className="font-headline font-bold text-lg">Official Mock Tests</h3>
         <div className="space-y-3">
           {tests.map((test, idx) => (
             <Card key={idx} className="rounded-2xl border-2 border-muted overflow-hidden hover:border-primary/20 transition-all group">
@@ -80,15 +140,14 @@ export default function AssessmentsPage() {
         </div>
       </div>
 
-      {/* Analysis Widget */}
+      {/* Mistake Analysis */}
       <div className="p-5 bg-destructive/5 rounded-3xl border border-destructive/10 flex gap-4">
          <AlertCircle className="h-6 w-6 text-destructive shrink-0 mt-1" />
          <div className="space-y-1">
             <h4 className="font-bold text-secondary text-sm">Mistake Analysis</h4>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              In your last Mock, you lost most points in <span className="text-destructive font-bold">Macro-Dynamics</span>. Vani has generated a special practice set to fix this.
+              In your last Mock, you lost points in <span className="text-destructive font-bold">Macro-Dynamics</span>. Vani has updated your study path to fix this.
             </p>
-            <Button variant="link" className="p-0 h-auto text-primary text-xs font-bold underline">Fix Weak Topics Now</Button>
          </div>
       </div>
     </div>
