@@ -1,3 +1,28 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "onboarding-classroom",
+      "description": "An AI classroom illustration with floating holograms",
+      "imageUrl": "https://picsum.photos/seed/wani-1/800/600",
+      "imageHint": "classroom technology"
+    },
+    {
+      "id": "student-dashboard-hero",
+      "description": "Student studying with a digital tablet",
+      "imageUrl": "https://picsum.photos/seed/wani-2/600/400",
+      "imageHint": "online learning"
+    },
+    {
+      "id": "ai-tutor-avatar",
+      "description": "Friendly AI tutor bot illustration",
+      "imageUrl": "https://picsum.photos/seed/wani-3/200/200",
+      "imageHint": "robot tutor"
+    },
+    {
+      "id": "lecture-thumbnail",
+      "description": "Academic lecture video thumbnail",
+      "imageUrl": "https://picsum.photos/seed/wani-4/600/340",
+      "imageHint": "university lecture"
+    }
+  ]
 }
