@@ -24,7 +24,7 @@ import {
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { useFirestore, useUser, useDoc, useCollection } from '@/firebase'
-import { doc, collection, query, where, orderBy, limit } from 'firebase/firestore'
+import { doc, collection, query, where } from 'firebase/firestore'
 
 export default function StudentDashboard() {
   const [mounted, setMounted] = useState(false)
@@ -40,20 +40,29 @@ export default function StudentDashboard() {
 
   const { data: profile, loading: profileLoading } = useDoc(studentRef);
 
-  // 2. Fetch the Latest Lecture for their section
-  const latestLectureQuery = useMemo(() => {
-    if (!db || !profile) return null;
+  // 2. Fetch lectures for their section (simplified query to avoid index requirement)
+  const sectionLecturesQuery = useMemo(() => {
+    if (!db || !profile?.section) return null;
     return query(
       collection(db, 'lectures'),
-      where('semester', '==', profile.semester),
-      where('section', '==', profile.section),
-      orderBy('createdAt', 'desc'),
-      limit(1)
+      where('section', '==', profile.section)
     );
   }, [db, profile]);
 
-  const { data: lectures, loading: lecturesLoading } = useCollection(latestLectureQuery);
-  const latestLecture: any = lectures?.[0];
+  const { data: lectures, loading: lecturesLoading } = useCollection(sectionLecturesQuery);
+
+  // 3. Filter for semester and sort by date in memory
+  const latestLecture = useMemo(() => {
+    if (!lectures || lectures.length === 0 || !profile) return null;
+    
+    return [...lectures]
+      .filter(l => l.semester === profile.semester)
+      .sort((a, b) => {
+        const timeA = a.createdAt?.seconds || 0;
+        const timeB = b.createdAt?.seconds || 0;
+        return timeB - timeA;
+      })[0];
+  }, [lectures, profile]);
 
   useEffect(() => {
     setMounted(true)
@@ -66,7 +75,6 @@ export default function StudentDashboard() {
 
   return (
     <div className="space-y-6 pb-20">
-      {/* Dynamic Header */}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-muted-foreground font-medium text-sm">{greeting}, {profile?.name || 'Student'} 👋</h2>
@@ -78,7 +86,6 @@ export default function StudentDashboard() {
         </Link>
       </div>
 
-      {/* Dynamic Daily Lecture Feed */}
       {lecturesLoading || profileLoading ? (
         <Card className="rounded-[2.5rem] p-12 flex items-center justify-center bg-muted/20 border-none">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -125,7 +132,6 @@ export default function StudentDashboard() {
         </Card>
       )}
 
-      {/* Quick Access Grid */}
       <div className="grid grid-cols-4 gap-4">
         {[
           { icon: MessageSquare, label: "AI Tutor", color: "bg-blue-500", path: "/chat" },
@@ -142,7 +148,6 @@ export default function StudentDashboard() {
         ))}
       </div>
 
-      {/* AI Recommendations */}
       <div className="space-y-4">
         <h3 className="font-headline font-bold text-lg flex items-center gap-2">
           <Lightbulb className="h-5 w-5 text-primary" />
@@ -164,7 +169,6 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* Gamification/Progress */}
       <Card className="rounded-[2.5rem] border-none bg-secondary text-white shadow-xl p-6">
         <div className="flex items-center gap-6">
           <div className="relative h-20 w-20 flex items-center justify-center">

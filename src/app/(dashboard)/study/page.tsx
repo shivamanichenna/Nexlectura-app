@@ -1,16 +1,17 @@
+
 'use client';
 
 import { useState, useMemo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Search, Play, Clock, BookOpen, ChevronRight, Filter, Bookmark, Upload, AlertCircle, Loader2 } from "lucide-react"
+import { Search, Play, Clock, BookOpen, ChevronRight, Filter, Bookmark, Loader2 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useFirestore, useCollection } from '@/firebase'
-import { collection, query, orderBy, where } from 'firebase/firestore'
+import { collection, query } from 'firebase/firestore'
 import { formatDistanceToNow } from 'date-fns'
 
 export default function StudyHubPage() {
@@ -18,7 +19,6 @@ export default function StudyHubPage() {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null)
   const db = useFirestore()
 
-  // Define subjects
   const subjects = [
     { name: "Economics", color: "bg-orange-500", code: "ECO101" },
     { name: "Mathematics", color: "bg-blue-500", code: "MAT202" },
@@ -26,28 +26,30 @@ export default function StudyHubPage() {
     { name: "DBMS", color: "bg-emerald-500", code: "CS401" },
   ]
 
-  // Memoize the lectures query
-  const lecturesQuery = useMemo(() => {
+  // Simplified query: Fetch all and sort/filter in JS to avoid index requirement
+  const allLecturesQuery = useMemo(() => {
     if (!db) return null;
-    let baseQuery = collection(db, 'lectures');
-    
-    if (selectedSubject) {
-      return query(
-        baseQuery,
-        where('subject', '==', selectedSubject),
-        orderBy('createdAt', 'desc')
-      );
-    }
-    
-    return query(baseQuery, orderBy('createdAt', 'desc'));
-  }, [db, selectedSubject]);
+    return query(collection(db, 'lectures'));
+  }, [db]);
 
-  const { data: lectures, loading } = useCollection(lecturesQuery);
+  const { data: lectures, loading } = useCollection(allLecturesQuery);
 
-  const filteredLectures = lectures?.filter(lec => 
-    lec.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    lec.subject?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const processedLectures = useMemo(() => {
+    if (!lectures) return [];
+    
+    return [...lectures]
+      .filter(lec => {
+        const matchesSearch = lec.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                             lec.subject?.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSubject = !selectedSubject || lec.subject === selectedSubject;
+        return matchesSearch && matchesSubject;
+      })
+      .sort((a, b) => {
+        const timeA = a.createdAt?.seconds || 0;
+        const timeB = b.createdAt?.seconds || 0;
+        return timeB - timeA;
+      });
+  }, [lectures, searchQuery, selectedSubject]);
 
   return (
     <div className="space-y-6 pb-20">
@@ -112,9 +114,9 @@ export default function StudyHubPage() {
               <div className="flex justify-center p-12">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : filteredLectures && filteredLectures.length > 0 ? (
+            ) : processedLectures.length > 0 ? (
               <div className="space-y-3">
-                {filteredLectures.map((lec: any) => (
+                {processedLectures.map((lec: any) => (
                   <Link href={`/study/${lec.id}`} key={lec.id}>
                     <Card className="rounded-[2rem] border-none bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer overflow-hidden border-2 border-muted hover:border-primary/20">
                       <CardContent className="p-4 flex gap-4">
