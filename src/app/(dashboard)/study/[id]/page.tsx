@@ -28,8 +28,8 @@ import {
   Brain
 } from "lucide-react"
 import { useRouter, useParams } from "next/navigation"
-import { useFirestore, useDoc } from '@/firebase'
-import { doc } from 'firebase/firestore'
+import { useFirestore, useDoc, useUser } from '@/firebase'
+import { doc, setDoc, deleteDoc } from 'firebase/firestore'
 import { autoLectureNotesSummary, type AutoLectureNotesSummaryOutput } from "@/ai/flows/auto-lecture-notes-summary-flow"
 import { generateLectureBilingualSubtitles, type LectureBilingualSubtitlesOutput } from "@/ai/flows/lecture-bilingual-subtitles"
 import { useToast } from "@/hooks/use-toast"
@@ -39,18 +39,18 @@ export default function LecturePlayerPage() {
   const params = useParams()
   const lectureId = params.id as string
   const { toast } = useToast()
+  const { user } = useUser()
+  const db = useFirestore()
   
   const [isPlaying, setIsPlaying] = useState(false)
   const [bilingual, setBilingual] = useState(true)
   const [isGenerating, setIsGenerating] = useState(false)
-  const [isBookmarked, setIsBookmarked] = useState(false)
   const [isOfflineSaved, setIsOfflineSaved] = useState(false)
   const [activeSegment, setActiveSegment] = useState(0)
   const [aiData, setAiData] = useState<AutoLectureNotesSummaryOutput | null>(null)
   const [subtitleData, setSubtitleData] = useState<LectureBilingualSubtitlesOutput | null>(null)
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const db = useFirestore()
   
   const lectureRef = useMemo(() => {
     if (!db || !lectureId) return null;
@@ -58,6 +58,15 @@ export default function LecturePlayerPage() {
   }, [db, lectureId]);
 
   const { data: lecture, loading: lectureLoading } = useDoc(lectureRef);
+
+  // Feature 16: Bookmark Logic
+  const bookmarkRef = useMemo(() => {
+    if (!db || !user || !lectureId) return null;
+    return doc(db, 'users', user.uid, 'bookmarks', lectureId);
+  }, [db, user, lectureId]);
+
+  const { data: bookmarkData } = useDoc(bookmarkRef);
+  const isBookmarked = !!bookmarkData;
 
   useEffect(() => {
     if (audioRef.current) {
@@ -68,6 +77,23 @@ export default function LecturePlayerPage() {
       }
     }
   }, [isPlaying]);
+
+  const handleToggleBookmark = async () => {
+    if (!db || !user || !lecture || !bookmarkRef) return;
+    
+    if (isBookmarked) {
+      deleteDoc(bookmarkRef).catch(console.error);
+      toast({ title: "Bookmark removed" });
+    } else {
+      setDoc(bookmarkRef, {
+        id: lectureId,
+        title: lecture.title,
+        subject: lecture.subject,
+        timestamp: new Date()
+      }).catch(console.error);
+      toast({ title: "Lecture bookmarked!" });
+    }
+  };
 
   const handleGenerateAI = async () => {
     if (!lecture) return;
@@ -152,7 +178,7 @@ export default function LecturePlayerPage() {
             <Button variant="ghost" size="icon" className="bg-white/10 text-white rounded-2xl backdrop-blur-xl border border-white/20 h-11 w-11" onClick={() => setIsOfflineSaved(!isOfflineSaved)}>
               <Download className={isOfflineSaved ? "text-primary fill-primary h-5 w-5" : "h-5 w-5"} />
             </Button>
-            <Button variant="ghost" size="icon" className="bg-white/10 text-white rounded-2xl backdrop-blur-xl border border-white/20 h-11 w-11" onClick={() => setIsBookmarked(!isBookmarked)}>
+            <Button variant="ghost" size="icon" className="bg-white/10 text-white rounded-2xl backdrop-blur-xl border border-white/20 h-11 w-11" onClick={handleToggleBookmark}>
               {isBookmarked ? <BookmarkCheck className="text-primary fill-primary h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
             </Button>
           </div>

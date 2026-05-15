@@ -7,11 +7,11 @@ import { Input } from "@/components/ui/input"
 import { Search, Play, Clock, BookOpen, ChevronRight, Filter, Bookmark, Loader2, Star, Sparkles, Folder, FileText, CheckCircle2, AlertCircle } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { useFirestore, useCollection } from '@/firebase'
-import { collection, query } from 'firebase/firestore'
+import { useFirestore, useCollection, useUser } from '@/firebase'
+import { collection, query, where, orderBy } from 'firebase/firestore'
 import { formatDistanceToNow } from 'date-fns'
 import { Progress } from "@/components/ui/progress"
 
@@ -19,6 +19,7 @@ export default function StudyHubPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null)
   const db = useFirestore()
+  const { user } = useUser()
 
   const subjects = [
     { name: "Economics", color: "bg-orange-500", code: "ECO101", lectures: 12, assignments: 2 },
@@ -35,10 +36,18 @@ export default function StudyHubPage() {
 
   const allLecturesQuery = useMemo(() => {
     if (!db) return null;
-    return query(collection(db, 'lectures'));
+    return query(collection(db, 'lectures'), orderBy('createdAt', 'desc'));
   }, [db]);
 
   const { data: lectures, loading } = useCollection(allLecturesQuery);
+
+  // Feature 16: Fetch bookmarked lectures
+  const bookmarksQuery = useMemo(() => {
+    if (!db || !user) return null;
+    return query(collection(db, 'users', user.uid, 'bookmarks'));
+  }, [db, user]);
+
+  const { data: bookmarkedLectures, loading: bookmarksLoading } = useCollection(bookmarksQuery);
 
   const processedLectures = useMemo(() => {
     if (!lectures) return [];
@@ -49,11 +58,6 @@ export default function StudyHubPage() {
                              lec.subject?.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesSubject = !selectedSubject || lec.subject === selectedSubject;
         return matchesSearch && matchesSubject;
-      })
-      .sort((a, b) => {
-        const timeA = a.createdAt?.seconds || 0;
-        const timeB = b.createdAt?.seconds || 0;
-        return timeB - timeA;
       });
   }, [lectures, searchQuery, selectedSubject]);
 
@@ -144,7 +148,6 @@ export default function StudyHubPage() {
                           <div className="space-y-1">
                             <div className="flex justify-between items-start gap-2">
                               <h4 className="font-bold text-secondary text-sm leading-tight line-clamp-2">{lec.title}</h4>
-                              <Star className="h-4 w-4 text-muted-foreground/30 hover:text-yellow-400 cursor-pointer" />
                             </div>
                             <div className="flex items-center gap-2">
                               <Badge className="bg-muted text-[8px] font-bold text-muted-foreground h-4 py-0 uppercase border-none">{lec.subject}</Badge>
@@ -230,7 +233,7 @@ export default function StudyHubPage() {
                 </div>
                 <div>
                    <h4 className="font-bold text-secondary text-sm">Saved Highlights</h4>
-                   <p className="text-[10px] text-muted-foreground font-bold uppercase mt-1">12 Explanations</p>
+                   <p className="text-[10px] text-muted-foreground font-bold uppercase mt-1">{bookmarkedLectures?.length || 0} Explanations</p>
                 </div>
              </Card>
              <Card className="rounded-3xl border-none bg-orange-50/50 p-6 flex flex-col items-center gap-4 text-center cursor-pointer hover:bg-orange-100/50 transition-colors group">
@@ -239,16 +242,37 @@ export default function StudyHubPage() {
                 </div>
                 <div>
                    <h4 className="font-bold text-secondary text-sm">AI Summaries</h4>
-                   <p className="text-[10px] text-muted-foreground font-bold uppercase mt-1">8 Topics</p>
+                   <p className="text-[10px] text-muted-foreground font-bold uppercase mt-1">Active Hub</p>
                 </div>
              </Card>
            </div>
            
            <div className="mt-8 space-y-4">
               <h3 className="font-headline font-bold text-lg px-1">Recently Bookmarked</h3>
-              <div className="p-8 text-center bg-muted/20 rounded-[2.5rem] border-2 border-dashed border-muted">
-                <p className="text-xs text-muted-foreground font-medium italic">"Tap the bookmark icon in any lecture player to save important explanations here."</p>
-              </div>
+              {bookmarksLoading ? (
+                <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+              ) : bookmarkedLectures && bookmarkedLectures.length > 0 ? (
+                <div className="grid gap-3">
+                  {bookmarkedLectures.map((lec: any) => (
+                    <Link href={`/study/${lec.id}`} key={lec.id}>
+                      <Card className="rounded-2xl border-none bg-white shadow-sm p-4 flex gap-4 items-center">
+                        <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                          <Bookmark className="h-6 w-6 fill-current" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-secondary text-sm truncate">{lec.title}</h4>
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold">{lec.subject}</p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-8 text-center bg-muted/20 rounded-[2.5rem] border-2 border-dashed border-muted">
+                  <p className="text-xs text-muted-foreground font-medium italic">"Tap the bookmark icon in any lecture player to save important explanations here."</p>
+                </div>
+              )}
            </div>
         </TabsContent>
       </Tabs>
