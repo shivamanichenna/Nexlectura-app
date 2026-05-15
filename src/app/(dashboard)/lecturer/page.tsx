@@ -8,20 +8,20 @@ import { Badge } from "@/components/ui/badge"
 import { 
   Upload, 
   Users, 
-  MessageCircle, 
   TrendingUp, 
   Play, 
-  Calendar,
-  CheckCircle2,
-  ArrowRight,
   Settings,
   Sparkles,
   Loader2,
-  FileAudio,
   Database,
   BarChart3,
   Clock,
-  BookOpen
+  BookOpen,
+  ArrowRight,
+  ChevronRight,
+  CheckCircle2,
+  AlertTriangle,
+  Zap
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -117,7 +117,7 @@ export default function LecturerDashboard() {
       {/* Header (Feature 1 & 2) */}
       <div className="flex justify-between items-start">
         <div className="space-y-1">
-          <p className="text-muted-foreground font-medium text-[10px] tracking-wide uppercase">Lecturer Portal • {profile?.department || 'Economics'}</p>
+          <p className="text-muted-foreground font-medium text-[10px] tracking-wide uppercase">Lecturer Portal • {profile?.department || 'Faculty'}</p>
           <h1 className="text-2xl font-headline font-bold text-secondary">
             {profile?.name ? `Prof. ${profile.name}` : 'Welcome back!'}
           </h1>
@@ -147,7 +147,7 @@ export default function LecturerDashboard() {
       {/* Engagement Stats (Feature 2 & 11) */}
       <div className="grid grid-cols-2 gap-3">
         <Card className="rounded-2xl border-none bg-primary text-white p-4 space-y-3 shadow-lg shadow-primary/20">
-          <div className="h-8 w-8 bg-white/20 rounded-lg flex items-center justify-center">
+          <div className="h-8 w-8 bg-white/20 rounded-lg flex items-center justify-center text-white">
             <Users className="h-4 w-4" />
           </div>
           <div className="space-y-0.5">
@@ -156,7 +156,7 @@ export default function LecturerDashboard() {
           </div>
         </Card>
         <Card className="rounded-2xl border-none bg-secondary text-white p-4 space-y-3 shadow-lg shadow-secondary/20">
-          <div className="h-8 w-8 bg-white/20 rounded-lg flex items-center justify-center">
+          <div className="h-8 w-8 bg-white/20 rounded-lg flex items-center justify-center text-white">
             <BarChart3 className="h-4 w-4" />
           </div>
           <div className="space-y-0.5">
@@ -171,7 +171,7 @@ export default function LecturerDashboard() {
         {[
           { icon: Upload, label: "Upload", path: "/lecturer/upload", color: "bg-blue-500" },
           { icon: BookOpen, label: "Classes", path: "/lecturer/classes", color: "bg-orange-500" },
-          { icon: Sparkles, label: "AI Tools", path: "/lecturer/ai-assistant", color: "bg-purple-500" },
+          { icon: Sparkles, label: "AI Assistant", path: "/lecturer/ai-assistant", color: "bg-purple-500" },
         ].map((action, idx) => (
           <Link href={action.path} key={idx} className="flex flex-col items-center gap-2 group">
             <div className={`h-14 w-14 rounded-2xl ${action.color} flex items-center justify-center text-white shadow-lg transition-all group-hover:scale-105 group-hover:-rotate-2`}>
@@ -182,6 +182,37 @@ export default function LecturerDashboard() {
         ))}
       </div>
 
+      {/* AI Classroom Insights Summary (Feature 13) */}
+      <Card className="rounded-[2.5rem] bg-secondary text-white border-none p-6 space-y-4 shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-24 h-24 bg-primary/20 rounded-full blur-xl" />
+        <div className="flex items-center justify-between relative z-10">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 bg-white/10 rounded-lg flex items-center justify-center text-primary">
+              <Sparkles className="h-4 w-4" />
+            </div>
+            <h3 className="font-bold text-white text-sm">Vani AI Insights</h3>
+          </div>
+          <Badge className="bg-primary/20 text-primary border-none text-[8px] font-bold uppercase">New Analytics</Badge>
+        </div>
+        <div className="space-y-3 relative z-10">
+          <div className="flex gap-3">
+             <div className="h-1.5 w-1.5 rounded-full bg-destructive mt-1.5 shrink-0 animate-pulse" />
+             <p className="text-[11px] text-white/70 leading-relaxed">
+               <span className="font-bold text-white">Confusion Spike:</span> 12 students struggled with "Money Multiplier" concepts in your last session.
+             </p>
+          </div>
+          <div className="flex gap-3">
+             <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+             <p className="text-[11px] text-white/70 leading-relaxed">
+               <span className="font-bold text-white">Engagement:</span> Quiz scores in <span className="text-emerald-400 font-bold">EC-B</span> improved by 15% after your analogy update.
+             </p>
+          </div>
+        </div>
+        <Button variant="link" className="text-primary font-bold p-0 h-auto text-[10px] w-full justify-start relative z-10" asChild>
+          <Link href="/lecturer/insights">View Deep Analytics <ArrowRight className="h-3 w-3 ml-1" /></Link>
+        </Button>
+      </Card>
+
       {/* Recent Activity Feed (Feature 2) */}
       <section className="space-y-4">
         <div className="flex justify-between items-center px-1">
@@ -189,12 +220,12 @@ export default function LecturerDashboard() {
             <Clock className="h-5 w-5 text-primary" />
             Classroom Overview
           </h3>
-          <Badge variant="outline" className="text-[10px] font-bold border-primary text-primary">Live Updates</Badge>
+          <Link href="/lecturer/classes" className="text-xs font-bold text-primary">View All</Link>
         </div>
 
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           {/* Pending Tasks (Feature 9) */}
-          <Card className="rounded-[1.75rem] border-2 border-muted hover:border-primary/10 transition-all bg-white p-5">
+          <Card className="rounded-2xl border-2 border-muted hover:border-primary/10 transition-all bg-white p-4 group">
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center">
                 <CheckCircle2 className="h-6 w-6" />
@@ -203,93 +234,42 @@ export default function LecturerDashboard() {
                 <h4 className="font-bold text-sm text-secondary">Grading: Unit 2 Quiz</h4>
                 <p className="text-[10px] text-muted-foreground font-bold uppercase">42 Submissions Pending • CSE-A</p>
               </div>
-              <Button size="icon" variant="ghost" className="rounded-full text-muted-foreground hover:text-primary">
-                <ArrowRight className="h-5 w-5" />
-              </Button>
+              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
             </div>
           </Card>
 
           {/* Recent Lectures (Feature 2 & 20) */}
-          <div className="space-y-3">
-            <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-1">Recent Uploads</h4>
-            {loading ? (
-              <div className="flex justify-center p-8">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
-              </div>
-            ) : lectures && lectures.length > 0 ? (
-              lectures.slice(0, 2).map((lecture: any) => (
-                <Link href={`/study/${lecture.id}`} key={lecture.id}>
-                  <Card className="rounded-2xl border-none bg-white shadow-sm border-2 border-muted hover:border-primary/20 transition-all">
-                    <CardContent className="p-4 flex items-center gap-4">
-                      <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                        <Play className="h-5 w-5 fill-current" />
+          {loading ? (
+            <div className="flex justify-center p-8">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : lectures && lectures.length > 0 ? (
+            lectures.slice(0, 3).map((lecture: any) => (
+              <Link href={`/study/${lecture.id}`} key={lecture.id}>
+                <Card className="rounded-2xl border-none bg-white shadow-sm border-2 border-muted hover:border-primary/20 transition-all">
+                  <CardContent className="p-4 flex items-center gap-4">
+                    <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
+                      <Play className="h-5 w-5 fill-current" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-sm text-secondary truncate">{lecture.title}</h4>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <Badge variant="secondary" className="text-[8px] h-4 py-0 uppercase font-bold">{lecture.subject}</Badge>
+                        <span className="text-[9px] text-muted-foreground font-bold">{lecture.section} • {lecture.semester} Sem</span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-sm text-secondary truncate">{lecture.title}</h4>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <Badge variant="secondary" className="text-[8px] h-4 py-0 uppercase font-bold">{lecture.subject}</Badge>
-                          <span className="text-[9px] text-muted-foreground font-bold">{lecture.section} • {lecture.semester} Sem</span>
-                        </div>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))
-            ) : (
-              <Card className="rounded-2xl border-2 border-dashed border-muted p-8 text-center bg-muted/5">
-                <p className="text-xs font-medium text-muted-foreground">Start by uploading your first live lecture.</p>
-              </Card>
-            )}
-          </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </CardContent>
+                </Card>
+              </Link>
+            ))
+          ) : (
+            <Card className="rounded-2xl border-2 border-dashed border-muted p-8 text-center bg-muted/5">
+              <p className="text-xs font-medium text-muted-foreground">Start by uploading your first live lecture.</p>
+            </Card>
+          )}
         </div>
       </section>
-
-      {/* AI Classroom Insights Summary (Feature 13) */}
-      <Card className="rounded-[2.5rem] bg-accent/30 border-none p-6 space-y-4">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 bg-white rounded-lg flex items-center justify-center text-primary shadow-sm">
-            <Sparkles className="h-4 w-4" />
-          </div>
-          <h3 className="font-bold text-secondary text-sm">Vani AI Insights</h3>
-        </div>
-        <div className="space-y-3">
-          <div className="flex gap-3">
-             <div className="h-1.5 w-1.5 rounded-full bg-destructive mt-1.5 shrink-0 animate-pulse" />
-             <p className="text-[11px] text-muted-foreground leading-relaxed">
-               <span className="font-bold text-secondary">Confusion Spike:</span> 12 students struggled with "Money Multiplier" concepts in your last session.
-             </p>
-          </div>
-          <div className="flex gap-3">
-             <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-             <p className="text-[11px] text-muted-foreground leading-relaxed">
-               <span className="font-bold text-secondary">Engagement:</span> Quiz scores in <span className="text-emerald-600 font-bold">EC-B</span> improved by 15% after you pinned the 'CRR Analogy'.
-             </p>
-          </div>
-        </div>
-        <Button variant="link" className="text-primary font-bold p-0 h-auto text-[10px] w-full justify-start" asChild>
-          <Link href="/lecturer/insights">View Comprehensive Analytics <ArrowRight className="h-3 w-3 ml-1" /></Link>
-        </Button>
-      </Card>
     </div>
-  )
-}
-
-function ChevronRight(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m9 18 6-6-6-6" />
-    </svg>
   )
 }
