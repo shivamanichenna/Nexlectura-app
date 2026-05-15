@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, Suspense } from "react"
@@ -11,6 +12,8 @@ import { doc, getDoc } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase';
 import { useToast } from "@/hooks/use-toast"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { errorEmitter } from '@/firebase/error-emitter'
+import { FirestorePermissionError } from '@/firebase/errors'
 
 function LoginForm() {
   const router = useRouter()
@@ -43,14 +46,22 @@ function LoginForm() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Fetch user role from Firestore to ensure valid profile exists
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      // Fetch user role from Firestore
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef).catch(err => {
+        const permissionError = new FirestorePermissionError({
+          path: userDocRef.path,
+          operation: 'get',
+          originalError: err
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        throw err;
+      });
       
       if (userDoc.exists()) {
         const userData = userDoc.data();
         const userRole = userData.role;
 
-        // Persist role for layout handling
         if (typeof window !== 'undefined') {
           localStorage.setItem('vani-role', userRole);
         }
@@ -60,35 +71,31 @@ function LoginForm() {
           description: "Login successful.",
         });
 
-        // Redirect based on actual stored role
-        if (userRole === 'lecturer') {
-          router.push('/lecturer');
-        } else {
-          router.push('/home');
-        }
+        router.push(userRole === 'lecturer' ? '/lecturer' : '/home');
       } else {
         toast({
           variant: "destructive",
           title: "Profile Missing",
-          description: "No profile found for this user. Please sign up first.",
+          description: "No profile found. Please sign up first.",
         });
       }
     } catch (error: any) {
       const authError = error as AuthError;
       
       if (authError.code === 'auth/configuration-not-found') {
-        setConfigError("Authentication is not yet configured. Please enable 'Email/Password' in your Firebase Console.");
+        setConfigError("Authentication is not yet configured. Please enable 'Email/Password' in your Firebase Console (Authentication > Sign-in method).");
       } else if (authError.code === 'auth/invalid-credential') {
         toast({
           variant: "destructive",
           title: "Login failed",
           description: "Invalid email or password. Please try again.",
         });
-      } else {
+      } else if (error.message?.includes('offline')) {
+        // Handled by global listener but we also show a toast
         toast({
           variant: "destructive",
-          title: "Error",
-          description: authError.message || "An unexpected error occurred.",
+          title: "Database Offline",
+          description: "Could not reach Firestore. Please check your internet and Firebase Console.",
         });
       }
     } finally {
@@ -106,7 +113,7 @@ function LoginForm() {
           <h1 className="text-3xl font-headline font-bold text-secondary">
             {role === 'lecturer' ? "Lecturer Portal" : "Welcome Back"}
           </h1>
-          <p className="text-muted-foreground mt-2 text-lg">
+          <p className="text-muted-foreground mt-2 text-lg leading-tight">
             {role === 'lecturer' ? "Manage your AI classroom." : "Your AI classroom is waiting."}
           </p>
         </div>
