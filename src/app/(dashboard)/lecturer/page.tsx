@@ -1,7 +1,6 @@
+'use client';
 
-"use client"
-
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -18,13 +17,29 @@ import {
   BookOpen,
   ArrowRight,
   Settings,
-  Sparkles
+  Sparkles,
+  Loader2,
+  FileAudio
 } from "lucide-react"
-import Image from "next/image"
 import Link from "next/link"
+import { useFirestore, useUser, useCollection } from '@/firebase'
+import { collection, query, where, orderBy } from 'firebase/firestore'
 
 export default function LecturerDashboard() {
-  const [activeTab, setActiveTab] = useState('overview')
+  const db = useFirestore()
+  const { user } = useUser()
+
+  // Memoize the query to fetch lectures for the current lecturer
+  const lecturesQuery = useMemo(() => {
+    if (!db || !user) return null
+    return query(
+      collection(db, 'lectures'),
+      where('lecturerId', '==', user.uid),
+      orderBy('createdAt', 'desc')
+    )
+  }, [db, user])
+
+  const { data: lectures, loading } = useCollection(lecturesQuery)
 
   return (
     <div className="space-y-6 pb-20">
@@ -90,6 +105,59 @@ export default function LecturerDashboard() {
         </Link>
       </div>
 
+      {/* Recent Uploads */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center px-1">
+          <h3 className="font-headline font-bold text-lg flex items-center gap-2">
+            <FileAudio className="h-5 w-5 text-primary" />
+            My Uploaded Lectures
+          </h3>
+          <Link href="/lecturer/upload" className="text-xs font-bold text-primary flex items-center">
+            View All <ArrowRight className="h-3 w-3 ml-1" />
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center p-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : lectures && lectures.length > 0 ? (
+          <div className="grid gap-3">
+            {lectures.map((lecture: any) => (
+              <Card key={lecture.id} className="rounded-2xl border-2 border-muted overflow-hidden hover:border-primary/20 transition-all group">
+                <CardContent className="p-4 flex items-center gap-4">
+                  <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
+                    <Play className="h-6 w-6 fill-current" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-sm text-secondary truncate">{lecture.title}</h4>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <Badge variant="outline" className="text-[9px] h-4 py-0 uppercase font-bold">{lecture.subject}</Badge>
+                      <span className="text-[10px] text-muted-foreground font-bold">{lecture.semester} • {lecture.section}</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <Badge variant={lecture.status === 'completed' ? 'default' : 'secondary'} className="text-[8px] h-4 uppercase mb-1">
+                      {lecture.status}
+                    </Badge>
+                    <p className="text-[9px] font-bold text-muted-foreground">
+                      {lecture.createdAt?.toDate().toLocaleDateString() || 'Just now'}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card className="rounded-2xl border-2 border-dashed border-muted p-8 text-center bg-muted/5">
+            <p className="text-sm font-medium text-muted-foreground">No lectures uploaded yet.</p>
+            <Link href="/lecturer/upload">
+              <Button variant="link" className="text-primary font-bold mt-2">Upload your first lecture</Button>
+            </Link>
+          </Card>
+        )}
+      </div>
+
       {/* Today's Schedule */}
       <div className="space-y-4">
         <div className="flex justify-between items-center">
@@ -153,28 +221,6 @@ export default function LecturerDashboard() {
           </Button>
         </Link>
       </Card>
-
-      {/* Syllabus Knowledge Base */}
-      <div className="space-y-4">
-        <h3 className="font-headline font-bold text-lg flex items-center gap-2">
-          <BookOpen className="h-5 w-5 text-secondary" />
-          Syllabus & Knowledge Base
-        </h3>
-        <Link href="/lecturer/library">
-          <Card className="rounded-3xl border-2 border-muted hover:border-primary/20 transition-all cursor-pointer">
-            <CardContent className="p-5 flex items-center gap-4">
-              <div className="h-12 w-12 bg-muted/50 rounded-2xl flex items-center justify-center">
-                 <BookOpen className="h-6 w-6 text-muted-foreground" />
-              </div>
-              <div className="flex-1">
-                <h4 className="font-bold text-sm text-secondary">Course Knowledge Base</h4>
-                <p className="text-xs text-muted-foreground">3 PDFs, 1 Syllabus Uploaded</p>
-              </div>
-              <Plus className="h-5 w-5 text-primary" />
-            </CardContent>
-          </Card>
-        </Link>
-      </div>
     </div>
   )
 }
