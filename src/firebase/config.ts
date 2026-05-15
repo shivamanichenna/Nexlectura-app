@@ -23,6 +23,15 @@ let db: Firestore;
 let storage: FirebaseStorage;
 
 export function initializeFirebase() {
+  // Diagnostic check for missing environment variables
+  const missingKeys = Object.entries(firebaseConfig)
+    .filter(([_, value]) => !value || value.includes('your_'))
+    .map(([key]) => key);
+
+  if (missingKeys.length > 0 && typeof window !== 'undefined') {
+    console.warn(`Firebase Warning: Missing or placeholder config keys: ${missingKeys.join(', ')}. Check your .env file.`);
+  }
+
   if (!getApps().length) {
     app = initializeApp(firebaseConfig);
   } else {
