@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
@@ -21,7 +22,9 @@ import {
   Loader2,
   FileText,
   AlertCircle,
-  Trophy
+  Trophy,
+  Target,
+  BarChart3
 } from "lucide-react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
@@ -63,6 +66,17 @@ export default function StudentDashboard() {
     { time: "11:30 AM", title: "Operating Systems", lecturer: "Prof. S. Murali", room: "Room 402", status: "Upcoming" },
   ];
 
+  const analyticsData = {
+    consistency: 85,
+    masteryBySubject: [
+      { subject: "Economics", level: 92, trend: "+12%" },
+      { subject: "DBMS", level: 64, trend: "+5%" },
+      { subject: "Maths", level: 78, trend: "-2%" },
+    ],
+    frictionPoint: "Macro-Dynamics (Unit 2)",
+    streak: 12
+  }
+
   useEffect(() => {
     setMounted(true)
     const hour = new Date().getHours()
@@ -83,7 +97,7 @@ export default function StudentDashboard() {
         <div className="flex flex-col items-end gap-2">
           <div className="flex items-center gap-1.5 bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20 group">
             <Flame className="h-4 w-4 text-primary fill-primary" />
-            <span className="font-bold text-xs text-primary">12 Day Streak</span>
+            <span className="font-bold text-xs text-primary">{analyticsData.streak} Day Streak</span>
           </div>
           <Badge variant="secondary" className="text-[10px] font-bold uppercase">{profile?.section} • {profile?.semester} Sem</Badge>
         </div>
@@ -154,7 +168,7 @@ export default function StudentDashboard() {
         ))}
       </div>
 
-      {/* Today's Schedule (Feature 3) */}
+      {/* Today's Schedule */}
       <section className="space-y-3">
         <h3 className="font-headline font-bold text-lg flex items-center gap-2 px-1">
           <Calendar className="h-5 w-5 text-primary" />
@@ -181,7 +195,75 @@ export default function StudentDashboard() {
         </div>
       </section>
 
-      {/* AI Recommendations & Reminders (Feature 13, 17, 18) */}
+      {/* AI Analytics & Growth (Feature 14) */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between px-1">
+          <h3 className="font-headline font-bold text-lg flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-primary" />
+            Analytics & Growth
+          </h3>
+          <Badge className="bg-emerald-100 text-emerald-600 border-none font-bold text-[10px]">ON TRACK</Badge>
+        </div>
+        
+        <Card className="rounded-[2.5rem] border-none bg-secondary text-white shadow-2xl p-6 overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-xl" />
+          <div className="space-y-6">
+            <div className="flex items-center gap-6">
+              <div className="relative h-20 w-20 flex items-center justify-center shrink-0">
+                 <svg className="h-20 w-20 transform -rotate-90">
+                    <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-white/10" />
+                    <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray="226" strokeDashoffset={226 * (1 - analyticsData.consistency / 100)} className="text-primary transition-all duration-1000" />
+                 </svg>
+                 <div className="absolute flex flex-col items-center">
+                    <span className="font-bold text-lg">{analyticsData.consistency}%</span>
+                    <span className="text-[8px] uppercase font-bold text-white/40">Consistency</span>
+                 </div>
+              </div>
+              <div className="flex-1 space-y-1">
+                <h4 className="font-bold text-base flex items-center gap-1.5">
+                  Learning Mastery
+                  <Trophy className="h-4 w-4 text-primary" />
+                </h4>
+                <p className="text-xs text-white/60 leading-relaxed">Top 15% of <span className="text-white font-bold">{profile?.section || 'your class'}</span> this week. Your doubt resolution speed is improving!</p>
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-2 border-t border-white/10">
+               <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Subject-wise Performance</p>
+               {analyticsData.masteryBySubject.map((item, i) => (
+                 <div key={i} className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-bold">
+                       <span>{item.subject}</span>
+                       <div className="flex gap-2">
+                          <span className="text-primary">{item.level}%</span>
+                          <span className={item.trend.startsWith('+') ? 'text-emerald-400' : 'text-red-400'}>{item.trend}</span>
+                       </div>
+                    </div>
+                    <Progress value={item.level} className="h-1.5 bg-white/10" />
+                 </div>
+               ))}
+            </div>
+          </div>
+        </Card>
+
+        {/* Feature 13 & 14 friction analysis */}
+        <Card className="rounded-3xl border-none bg-blue-50 p-5 flex items-start gap-4 border border-blue-100">
+           <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center text-blue-500 shadow-sm shrink-0">
+             <Target className="h-5 w-5" />
+           </div>
+           <div className="space-y-1 flex-1">
+             <p className="font-bold text-sm text-secondary">Identified Friction Point</p>
+             <p className="text-[10px] text-muted-foreground leading-relaxed">
+               You spent 3x more time on <span className="text-blue-600 font-bold">{analyticsData.frictionPoint}</span> doubts. Re-watching the classroom explanation is recommended.
+             </p>
+             <Button variant="link" className="text-blue-600 font-bold p-0 h-auto text-[10px] flex items-center gap-1">
+               Go to Lecture <ChevronRight className="h-3 w-3" />
+             </Button>
+           </div>
+        </Card>
+      </section>
+
+      {/* AI Recommendations (Feature 13) */}
       <section className="space-y-4">
         <h3 className="font-headline font-bold text-lg flex items-center gap-2 px-1">
           <Lightbulb className="h-5 w-5 text-primary" />
@@ -201,47 +283,19 @@ export default function StudentDashboard() {
             </Card>
           </Link>
           
-          <Card className="rounded-3xl border-none bg-blue-50 p-4 flex items-center gap-4 border border-blue-100">
-            <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center text-blue-500 shadow-sm">
-              <AlertCircle className="h-5 w-5" />
-            </div>
-            <div className="flex-1">
-              <p className="font-bold text-sm text-secondary">Assignment Due</p>
-              <p className="text-[10px] text-muted-foreground">DBMS Weekly Task is due in 2 days.</p>
-            </div>
-            <Button variant="link" size="sm" className="text-blue-500 font-bold text-[10px] h-auto p-0">Submit</Button>
-          </Card>
-        </div>
-      </section>
-
-      {/* Mastery & Performance (Feature 14, 25) */}
-      <section>
-        <Card className="rounded-[2.5rem] border-none bg-secondary text-white shadow-2xl p-6 overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-xl" />
-          <div className="flex items-center gap-6">
-            <div className="relative h-20 w-20 flex items-center justify-center shrink-0">
-               <svg className="h-20 w-20 transform -rotate-90">
-                  <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-white/10" />
-                  <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray="226" strokeDashoffset={226 * (1 - 0.72)} className="text-primary transition-all duration-1000" />
-               </svg>
-               <div className="absolute flex flex-col items-center">
-                  <span className="font-bold text-lg">72%</span>
-                  <span className="text-[8px] uppercase font-bold text-white/40">Goal</span>
-               </div>
-            </div>
-            <div className="flex-1 space-y-1">
-              <h4 className="font-bold text-base flex items-center gap-1.5">
-                Weekly Mastery
-                <Trophy className="h-4 w-4 text-primary" />
-              </h4>
-              <p className="text-xs text-white/60 leading-relaxed">You're in the top 15% of <span className="text-white font-bold">{profile?.section}</span> this week! Keep it up.</p>
-              <div className="flex items-center gap-1 text-[10px] text-emerald-400 font-bold mt-2">
-                <ArrowUpRight className="h-3 w-3" />
-                +12% progress from last week
+          <Link href="/study">
+            <Card className="rounded-3xl border-none bg-blue-50 p-4 flex items-center gap-4 border border-blue-100 hover:bg-blue-100/50 transition-colors group">
+              <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center text-blue-500 shadow-sm">
+                <AlertCircle className="h-5 w-5" />
               </div>
-            </div>
-          </div>
-        </Card>
+              <div className="flex-1">
+                <p className="font-bold text-sm text-secondary">Assignment Due</p>
+                <p className="text-[10px] text-muted-foreground">DBMS Weekly Task is due in 2 days.</p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+            </Card>
+          </Link>
+        </div>
       </section>
     </div>
   )
