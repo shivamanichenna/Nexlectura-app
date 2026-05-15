@@ -16,15 +16,16 @@ import {
   Calendar,
   ChevronRight,
   Lightbulb,
-  ArrowUpRight,
-  TrendingUp,
+  Trophy,
+  Target,
+  BarChart3,
   Brain,
   Loader2,
   FileText,
   AlertCircle,
-  Trophy,
-  Target,
-  BarChart3
+  TrendingUp,
+  Star,
+  Users
 } from "lucide-react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
@@ -61,10 +62,13 @@ export default function StudentDashboard() {
       .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0))[0];
   }, [lectures, profile]);
 
-  const todayLectures = [
-    { time: "09:00 AM", title: "Data Structures", lecturer: "Prof. Rao", room: "Room 102", status: "Completed" },
-    { time: "11:30 AM", title: "Operating Systems", lecturer: "Prof. S. Murali", room: "Room 402", status: "Upcoming" },
-  ];
+  const gamificationStats = {
+    xp: 2450,
+    level: 12,
+    nextLevelXp: 3000,
+    rank: "Silver II",
+    classPercentile: 85
+  }
 
   const analyticsData = {
     consistency: 85,
@@ -88,18 +92,24 @@ export default function StudentDashboard() {
 
   return (
     <div className="space-y-6 pb-24">
-      {/* Header */}
+      {/* Header with XP & Level (Feature 15) */}
       <div className="flex justify-between items-start">
         <div className="space-y-1">
-          <p className="text-muted-foreground font-medium text-xs tracking-wide uppercase">{greeting}, {profile?.name?.split(' ')[0] || 'Student'} 👋</p>
+          <p className="text-muted-foreground font-medium text-[10px] tracking-wide uppercase">{greeting}, {profile?.name?.split(' ')[0] || 'Student'} 👋</p>
           <h1 className="text-2xl font-headline font-bold text-secondary">Vani Learning Hub</h1>
         </div>
         <div className="flex flex-col items-end gap-2">
-          <div className="flex items-center gap-1.5 bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20 group">
-            <Flame className="h-4 w-4 text-primary fill-primary" />
-            <span className="font-bold text-xs text-primary">{analyticsData.streak} Day Streak</span>
-          </div>
-          <Badge variant="secondary" className="text-[10px] font-bold uppercase">{profile?.section} • {profile?.semester} Sem</Badge>
+           <div className="flex items-center gap-2 bg-secondary text-white px-3 py-1.5 rounded-full shadow-lg">
+              <Star className="h-3.5 w-3.5 text-primary fill-primary" />
+              <span className="text-[10px] font-bold">LVL {gamificationStats.level}</span>
+              <div className="h-3 w-12 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-full bg-primary" style={{ width: `${(gamificationStats.xp / gamificationStats.nextLevelXp) * 100}%` }} />
+              </div>
+           </div>
+           <div className="flex items-center gap-1.5 bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
+             <Flame className="h-3.5 w-3.5 text-primary fill-primary" />
+             <span className="font-bold text-[10px] text-primary">{analyticsData.streak} Day Streak</span>
+           </div>
         </div>
       </div>
 
@@ -157,7 +167,7 @@ export default function StudentDashboard() {
           { icon: MessageSquare, label: "AI Tutor", color: "bg-blue-500", path: "/chat" },
           { icon: Sparkles, label: "Revision", color: "bg-orange-500", path: "/revision" },
           { icon: Brain, label: "Quizzes", color: "bg-purple-500", path: "/tests" },
-          { icon: FileText, label: "Notes", color: "bg-emerald-500", path: "/study" },
+          { icon: AlertCircle, label: "Exam Mode", color: "bg-destructive", path: "/exam-mode" },
         ].map((item, idx) => (
           <Link href={item.path} key={idx} className="flex flex-col items-center gap-2 group">
             <div className={`h-14 w-14 rounded-2xl ${item.color} flex items-center justify-center text-white shadow-lg transition-all group-hover:scale-105 group-hover:-rotate-2`}>
@@ -168,41 +178,14 @@ export default function StudentDashboard() {
         ))}
       </div>
 
-      {/* Today's Schedule */}
-      <section className="space-y-3">
-        <h3 className="font-headline font-bold text-lg flex items-center gap-2 px-1">
-          <Calendar className="h-5 w-5 text-primary" />
-          Today's Lectures
-        </h3>
-        <div className="space-y-3">
-          {todayLectures.map((lec, idx) => (
-            <Card key={idx} className="rounded-2xl border-none bg-white shadow-sm hover:shadow-md transition-shadow">
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className="text-center min-w-[60px] border-r pr-4">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase">{lec.time.split(' ')[1]}</p>
-                  <p className="text-sm font-bold text-secondary">{lec.time.split(' ')[0]}</p>
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-bold text-sm text-secondary">{lec.title}</h4>
-                  <p className="text-[10px] text-muted-foreground font-medium">{lec.lecturer} • {lec.room}</p>
-                </div>
-                <Badge variant={lec.status === 'Completed' ? 'secondary' : 'outline'} className="text-[8px] h-4 font-bold">
-                  {lec.status}
-                </Badge>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* AI Analytics & Growth (Feature 14) */}
+      {/* AI Analytics & Performance Comparison (Feature 14 & 25) */}
       <section className="space-y-4">
         <div className="flex items-center justify-between px-1">
           <h3 className="font-headline font-bold text-lg flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-primary" />
             Analytics & Growth
           </h3>
-          <Badge className="bg-emerald-100 text-emerald-600 border-none font-bold text-[10px]">ON TRACK</Badge>
+          <Badge className="bg-emerald-100 text-emerald-600 border-none font-bold text-[10px]">TOP {100 - gamificationStats.classPercentile}%</Badge>
         </div>
         
         <Card className="rounded-[2.5rem] border-none bg-secondary text-white shadow-2xl p-6 overflow-hidden relative">
@@ -224,77 +207,107 @@ export default function StudentDashboard() {
                   Learning Mastery
                   <Trophy className="h-4 w-4 text-primary" />
                 </h4>
-                <p className="text-xs text-white/60 leading-relaxed">Top 15% of <span className="text-white font-bold">{profile?.section || 'your class'}</span> this week. Your doubt resolution speed is improving!</p>
+                <p className="text-xs text-white/60 leading-relaxed">Better than <span className="text-primary font-bold">{gamificationStats.classPercentile}%</span> of <span className="text-white font-bold">{profile?.section || 'your class'}</span>. Your doubt resolution speed is improving!</p>
               </div>
             </div>
 
             <div className="space-y-3 pt-2 border-t border-white/10">
-               <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Subject-wise Performance</p>
+               <div className="flex justify-between items-center mb-1">
+                 <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Subject Performance (vs Class Avg)</p>
+                 <TrendingUp className="h-3 w-3 text-emerald-400" />
+               </div>
                {analyticsData.masteryBySubject.map((item, i) => (
                  <div key={i} className="space-y-1.5">
                     <div className="flex justify-between text-xs font-bold">
                        <span>{item.subject}</span>
                        <div className="flex gap-2">
                           <span className="text-primary">{item.level}%</span>
-                          <span className={item.trend.startsWith('+') ? 'text-emerald-400' : 'text-red-400'}>{item.trend}</span>
+                          <span className={item.trend.startsWith('+') ? 'text-emerald-400 text-[10px]' : 'text-red-400 text-[10px]'}>{item.trend}</span>
                        </div>
                     </div>
-                    <Progress value={item.level} className="h-1.5 bg-white/10" />
+                    <div className="relative h-1.5 w-full bg-white/10 rounded-full">
+                      <div className="absolute top-0 left-0 h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${item.level}%` }} />
+                      <div className="absolute top-0 left-0 h-full w-[2px] bg-white/50" style={{ left: '72%' }} /> {/* Simulated Class Avg line */}
+                    </div>
                  </div>
                ))}
             </div>
           </div>
         </Card>
 
-        {/* Feature 13 & 14 friction analysis */}
+        {/* AI Memory Reinforcement (Feature 20) */}
         <Card className="rounded-3xl border-none bg-blue-50 p-5 flex items-start gap-4 border border-blue-100">
            <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center text-blue-500 shadow-sm shrink-0">
              <Target className="h-5 w-5" />
            </div>
            <div className="space-y-1 flex-1">
-             <p className="font-bold text-sm text-secondary">Identified Friction Point</p>
+             <p className="font-bold text-sm text-secondary">Memory Reinforcement</p>
              <p className="text-[10px] text-muted-foreground leading-relaxed">
-               You spent 3x more time on <span className="text-blue-600 font-bold">{analyticsData.frictionPoint}</span> doubts. Re-watching the classroom explanation is recommended.
+               It's been 3 days since you studied <span className="text-blue-600 font-bold">{analyticsData.frictionPoint}</span>. A quick 5-min recap will improve retention by 40%.
              </p>
-             <Button variant="link" className="text-blue-600 font-bold p-0 h-auto text-[10px] flex items-center gap-1">
-               Go to Lecture <ChevronRight className="h-3 w-3" />
+             <Button variant="link" className="text-blue-600 font-bold p-0 h-auto text-[10px] flex items-center gap-1" asChild>
+               <Link href="/revision">Start Recap <ChevronRight className="h-3 w-3" /></Link>
              </Button>
            </div>
         </Card>
       </section>
 
-      {/* AI Recommendations (Feature 13) */}
+      {/* Exam Preparation Assistant (Feature 17) */}
       <section className="space-y-4">
         <h3 className="font-headline font-bold text-lg flex items-center gap-2 px-1">
           <Lightbulb className="h-5 w-5 text-primary" />
-          AI Study Recommendations
+          Exam Preparation
         </h3>
+        <Link href="/exam-mode">
+          <Card className="rounded-[2.5rem] bg-accent text-accent-foreground border-none p-6 shadow-sm group hover:shadow-xl transition-all relative overflow-hidden">
+             <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-xl" />
+             <div className="flex items-center justify-between relative z-10">
+                <div className="space-y-1.5">
+                   <h4 className="text-lg font-headline font-bold text-secondary">Ready for Mid-terms?</h4>
+                   <p className="text-xs text-muted-foreground">Get predicted questions & unit roadmaps.</p>
+                   <div className="flex gap-3 mt-3">
+                      <div className="flex items-center gap-1.5 bg-white/50 px-3 py-1 rounded-full text-[9px] font-bold">
+                         <Target className="h-3 w-3 text-primary" /> 12 Topics Identified
+                      </div>
+                      <div className="flex items-center gap-1.5 bg-white/50 px-3 py-1 rounded-full text-[9px] font-bold">
+                         <TrendingUp className="h-3 w-3 text-emerald-500" /> Improvement: +15%
+                      </div>
+                   </div>
+                </div>
+                <div className="h-14 w-14 bg-primary text-white rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                   <Zap className="h-7 w-7 fill-current" />
+                </div>
+             </div>
+          </Card>
+        </Link>
+      </section>
+
+      {/* Subject Feed (Feature 19) */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between px-1">
+           <h3 className="font-headline font-bold text-lg flex items-center gap-2">
+             <BookOpen className="h-5 w-5 text-primary" />
+             Recent Coursework
+           </h3>
+           <Link href="/study" className="text-xs font-bold text-primary">Browse All</Link>
+        </div>
         <div className="grid gap-3">
-          <Link href="/revision">
-            <Card className="rounded-3xl border-none bg-accent p-4 flex items-center gap-4 hover:bg-accent/80 transition-colors group">
-              <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center text-primary shadow-sm">
-                <Brain className="h-5 w-5" />
-              </div>
-              <div className="flex-1">
-                <p className="font-bold text-sm text-secondary">Refresh OS Concepts</p>
-                <p className="text-[10px] text-muted-foreground">Vani identified 3 weak topics in Unit 2.</p>
-              </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
-            </Card>
-          </Link>
-          
-          <Link href="/study">
-            <Card className="rounded-3xl border-none bg-blue-50 p-4 flex items-center gap-4 border border-blue-100 hover:bg-blue-100/50 transition-colors group">
-              <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center text-blue-500 shadow-sm">
-                <AlertCircle className="h-5 w-5" />
-              </div>
-              <div className="flex-1">
-                <p className="font-bold text-sm text-secondary">Assignment Due</p>
-                <p className="text-[10px] text-muted-foreground">DBMS Weekly Task is due in 2 days.</p>
-              </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
-            </Card>
-          </Link>
+           {lecturesLoading ? (
+             <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+           ) : lectures?.slice(0, 3).map((lec: any) => (
+             <Link href={`/study/${lec.id}`} key={lec.id}>
+               <Card className="rounded-2xl border-none bg-white shadow-sm p-4 flex items-center gap-4 hover:shadow-md transition-shadow group">
+                 <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
+                   <Play className="h-6 w-6 fill-current" />
+                 </div>
+                 <div className="flex-1">
+                   <h4 className="font-bold text-sm text-secondary truncate">{lec.title}</h4>
+                   <p className="text-[10px] text-muted-foreground font-bold uppercase">{lec.subject} • {lec.semester} Sem</p>
+                 </div>
+                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
+               </Card>
+             </Link>
+           ))}
         </div>
       </section>
     </div>

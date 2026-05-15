@@ -16,7 +16,11 @@ import {
   ChevronRight,
   LogOut,
   Trophy,
-  Users
+  Users,
+  Star,
+  Zap,
+  Medal,
+  Target
 } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
@@ -47,14 +51,11 @@ export default function ProfilePage() {
     
     try {
       await signOut(auth)
-      // Clear local session state
       localStorage.removeItem('vani-role')
-
       toast({
         title: "Signed out successfully",
         description: "Come back soon to continue your journey!",
       })
-      // Redirect to login page so user can choose a different login role
       router.push("/login")
     } catch (error: any) {
       toast({
@@ -82,6 +83,8 @@ export default function ProfilePage() {
   } : {
     name: "Arjun Kothari",
     title: "B.Tech Economics • Semester 4",
+    xp: 2450,
+    level: 12,
     stats: [
       { icon: Clock, value: "124h", label: "Learning" },
       { icon: BookOpen, value: "48", label: "Lectures" },
@@ -107,7 +110,15 @@ export default function ProfilePage() {
         <div className="space-y-1">
           <h1 className="text-2xl font-headline font-bold text-secondary">{userData.name}</h1>
           <p className="text-muted-foreground text-sm font-medium">{userData.title}</p>
-          <Badge className="bg-primary/10 text-primary border-none mt-2 px-4">{isLecturer ? "Vani Expert" : "Beta Explorer"}</Badge>
+          {!isLecturer && (
+            <div className="flex items-center gap-2 justify-center mt-3">
+               <Badge className="bg-secondary text-white border-none px-3 py-1 gap-1.5">
+                  <Star className="h-3 w-3 text-primary fill-primary" />
+                  Level {userData.level}
+               </Badge>
+               <Badge variant="outline" className="border-primary text-primary font-bold">Silver II</Badge>
+            </div>
+          )}
         </div>
       </div>
 
@@ -124,21 +135,43 @@ export default function ProfilePage() {
         ))}
       </div>
 
-      {/* Achievement Row */}
+      {/* Achievement & Milestones (Feature 15) */}
       {!isLecturer && (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="font-headline font-bold text-lg">Achievements</h3>
-            <Button variant="link" className="text-primary font-bold p-0">View All</Button>
+        <div className="space-y-6">
+          <div className="space-y-4">
+            <div className="flex justify-between items-center px-1">
+              <h3 className="font-headline font-bold text-lg">Milestones</h3>
+              <span className="text-xs font-bold text-primary">6/12 Badges</span>
+            </div>
+            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+              {[
+                { label: "Night Owl", icon: Medal, color: "text-indigo-500", bg: "bg-indigo-50" },
+                { label: "Top 1%", icon: Trophy, color: "text-yellow-500", bg: "bg-yellow-50" },
+                { label: "Early Bird", icon: Zap, color: "text-primary", bg: "bg-primary/5" },
+                { label: "Consistency", icon: Target, color: "text-emerald-500", bg: "bg-emerald-50" },
+              ].map((badge, i) => (
+                <div key={i} className={`h-24 w-24 shrink-0 ${badge.bg} rounded-[2rem] flex flex-col items-center justify-center border-2 border-white shadow-sm transition-transform hover:scale-105 cursor-pointer`}>
+                  <badge.icon className={`h-10 w-10 ${badge.color}`} />
+                  <span className="text-[10px] font-bold mt-2 text-secondary">{badge.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-20 w-20 shrink-0 bg-accent rounded-2xl flex flex-col items-center justify-center text-accent-foreground border border-primary/10">
-                <Trophy className="h-8 w-8 text-primary" />
-                <span className="text-[9px] font-bold mt-1 text-center">Early Bird</span>
-              </div>
-            ))}
-          </div>
+
+          <Card className="rounded-3xl border-none bg-secondary text-white p-6 relative overflow-hidden">
+             <div className="absolute bottom-0 right-0 w-24 h-24 bg-primary/20 rounded-full blur-2xl" />
+             <div className="flex items-center justify-between relative z-10">
+                <div className="space-y-1">
+                   <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Global Rank</p>
+                   <h4 className="text-2xl font-headline font-bold">#482</h4>
+                   <p className="text-[10px] text-white/50">Top 15% of Vani Students</p>
+                </div>
+                <div className="text-right">
+                   <p className="text-xs font-bold">Next Rank</p>
+                   <p className="text-sm font-bold text-primary">Gold III</p>
+                </div>
+             </div>
+          </Card>
         </div>
       )}
 
