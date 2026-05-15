@@ -24,6 +24,12 @@ function LoginForm() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    
+    // Persist role for navigation persistence
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('vani-role', role)
+    }
+
     setTimeout(() => {
       if (role === 'lecturer') {
         router.push('/lecturer')

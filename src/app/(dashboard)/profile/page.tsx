@@ -1,6 +1,7 @@
 
 "use client"
 
+import { useState, useEffect } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -24,8 +25,12 @@ export default function ProfilePage() {
   const router = useRouter()
   const pathname = usePathname()
   const { toast } = useToast()
-  
-  const isLecturer = pathname.includes('/lecturer') || (typeof window !== 'undefined' && localStorage.getItem('vani-role') === 'lecturer')
+  const [isLecturer, setIsLecturer] = useState(false)
+
+  useEffect(() => {
+    const savedRole = typeof window !== 'undefined' ? localStorage.getItem('vani-role') : null
+    setIsLecturer(pathname.includes('/lecturer') || savedRole === 'lecturer')
+  }, [pathname])
 
   const handleSignOut = () => {
     toast({
@@ -33,11 +38,12 @@ export default function ProfilePage() {
       description: "Please wait a moment.",
     })
     
-    // Simulate clearing session
+    // Clear session
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('vani-role')
+    }
+
     setTimeout(() => {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('vani-role')
-      }
       toast({
         title: "Signed out successfully",
         description: "Come back soon to continue your journey!",
