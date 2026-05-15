@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -18,7 +18,8 @@ import {
   Languages,
   ChevronLeft,
   Sparkles,
-  Loader2
+  Loader2,
+  RotateCcw
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { autoLectureNotesSummary, type AutoLectureNotesSummaryOutput } from "@/ai/flows/auto-lecture-notes-summary-flow"

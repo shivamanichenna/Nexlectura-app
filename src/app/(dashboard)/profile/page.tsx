@@ -13,28 +13,62 @@ import {
   Clock, 
   Share2,
   ChevronRight,
-  LogOut
+  LogOut,
+  Trophy,
+  Users
 } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 
 export default function ProfilePage() {
   const router = useRouter()
+  const pathname = usePathname()
   const { toast } = useToast()
+  
+  const isLecturer = pathname.includes('/lecturer') || (typeof window !== 'undefined' && localStorage.getItem('vani-role') === 'lecturer')
 
   const handleSignOut = () => {
     toast({
-      title: "Signed out successfully",
-      description: "Come back soon to continue your learning journey!",
+      title: "Signing out...",
+      description: "Please wait a moment.",
     })
-    router.push("/")
+    
+    // Simulate clearing session
+    setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('vani-role')
+      }
+      toast({
+        title: "Signed out successfully",
+        description: "Come back soon to continue your journey!",
+      })
+      router.push("/")
+    }, 800)
   }
 
   const settingsItems = [
     { icon: Settings, label: "Account Settings", desc: "Security, Privacy, Connected IDs" },
-    { icon: Share2, label: "Refer a classmate", desc: "Get 1 month Vani Pro for free" },
+    { icon: Share2, label: "Refer a colleague", desc: "Invite others to Vani AI" },
     { icon: LogOut, label: "Sign Out", desc: "Logout from this device", color: "text-destructive", action: handleSignOut },
   ]
+
+  const userData = isLecturer ? {
+    name: "Prof. S. Murali Krishna",
+    title: "Senior Lecturer • Economics",
+    stats: [
+      { icon: Users, value: "842", label: "Students" },
+      { icon: BookOpen, value: "24", label: "Lectures" },
+      { icon: Clock, value: "18h", label: "Teaching" },
+    ]
+  } : {
+    name: "Arjun Kothari",
+    title: "B.Tech Economics • Semester 4",
+    stats: [
+      { icon: Clock, value: "124h", label: "Learning" },
+      { icon: BookOpen, value: "48", label: "Lectures" },
+      { icon: Calendar, value: "12d", label: "Streak" },
+    ]
+  }
 
   return (
     <div className="space-y-8 pb-10">
@@ -42,27 +76,23 @@ export default function ProfilePage() {
       <div className="flex flex-col items-center text-center space-y-4 pt-4">
         <div className="relative">
           <Avatar className="h-28 w-28 border-4 border-white shadow-xl">
-            <AvatarImage src="https://picsum.photos/seed/wani-student/200/200" />
-            <AvatarFallback>AK</AvatarFallback>
+            <AvatarImage src={`https://picsum.photos/seed/${isLecturer ? 'prof' : 'student'}-profile/200/200`} />
+            <AvatarFallback>{userData.name[0]}</AvatarFallback>
           </Avatar>
           <div className="absolute -bottom-1 -right-1 bg-primary text-white p-1.5 rounded-full border-2 border-white shadow-lg">
-             <Award className="h-4 w-4 fill-current" />
+             {isLecturer ? <Award className="h-4 w-4 fill-current" /> : <Trophy className="h-4 w-4 fill-current" />}
           </div>
         </div>
         <div className="space-y-1">
-          <h1 className="text-2xl font-headline font-bold text-secondary">Arjun Kothari</h1>
-          <p className="text-muted-foreground text-sm font-medium">B.Tech Economics • Semester 4</p>
-          <Badge className="bg-primary/10 text-primary border-none mt-2 px-4">Beta Explorer</Badge>
+          <h1 className="text-2xl font-headline font-bold text-secondary">{userData.name}</h1>
+          <p className="text-muted-foreground text-sm font-medium">{userData.title}</p>
+          <Badge className="bg-primary/10 text-primary border-none mt-2 px-4">{isLecturer ? "Vani Expert" : "Beta Explorer"}</Badge>
         </div>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-3 gap-4">
-        {[
-          { icon: Clock, value: "124h", label: "Learning" },
-          { icon: BookOpen, value: "48", label: "Lectures" },
-          { icon: Calendar, value: "12d", label: "Streak" },
-        ].map((stat, i) => (
+        {userData.stats.map((stat, i) => (
           <div key={i} className="flex flex-col items-center gap-1">
              <div className="h-10 w-10 bg-muted/50 rounded-xl flex items-center justify-center text-muted-foreground">
                <stat.icon className="h-5 w-5" />
@@ -74,20 +104,22 @@ export default function ProfilePage() {
       </div>
 
       {/* Achievement Row */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h3 className="font-headline font-bold text-lg">Achievements</h3>
-          <Button variant="link" className="text-primary font-bold p-0">View All</Button>
+      {!isLecturer && (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="font-headline font-bold text-lg">Achievements</h3>
+            <Button variant="link" className="text-primary font-bold p-0">View All</Button>
+          </div>
+          <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-20 w-20 shrink-0 bg-accent rounded-2xl flex flex-col items-center justify-center text-accent-foreground border border-primary/10">
+                <Trophy className="h-8 w-8 text-primary" />
+                <span className="text-[9px] font-bold mt-1 text-center">Early Bird</span>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-20 w-20 shrink-0 bg-accent rounded-2xl flex flex-col items-center justify-center text-accent-foreground border border-primary/10">
-              <TrophyIcon className="h-8 w-8 text-primary" />
-              <span className="text-[9px] font-bold mt-1 text-center">Early Bird</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Settings List */}
       <div className="space-y-3">
@@ -111,26 +143,5 @@ export default function ProfilePage() {
         ))}
       </div>
     </div>
-  )
-}
-
-function TrophyIcon({ className }: { className?: string }) {
-  return (
-    <svg 
-      className={className} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-    >
-      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-      <path d="M4 22h16" />
-      <path d="M10 22V18" />
-      <path d="M14 22V18" />
-      <path d="M18 4H6v7a6 6 0 0 0 12 0V4Z" />
-    </svg>
   )
 }

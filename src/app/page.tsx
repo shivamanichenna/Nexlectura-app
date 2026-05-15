@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -60,6 +61,7 @@ export default function LandingPage() {
                  width={240} 
                  height={240} 
                  className="rounded-2xl"
+                 data-ai-hint="classroom technology"
                />
             </div>
           </div>
@@ -92,14 +94,14 @@ export default function LandingPage() {
             ) : (
               <div className="flex flex-col gap-4 w-full">
                 <Button onClick={() => router.push('/login')} size="lg" className="w-full h-14 rounded-2xl text-lg font-semibold shadow-lg shadow-primary/20">
-                  Get Started as Student
+                  Join as Student
                 </Button>
-                <Button variant="outline" onClick={() => router.push('/home')} className="w-full h-14 rounded-2xl text-lg font-semibold border-2">
+                <Button variant="secondary" onClick={() => router.push('/login?role=lecturer')} size="lg" className="w-full h-14 rounded-2xl text-lg font-semibold shadow-lg">
+                  Lecturer Portal
+                </Button>
+                <Button variant="ghost" onClick={() => router.push('/home')} className="w-full h-12 rounded-2xl text-muted-foreground font-medium">
                   Continue as Guest
                 </Button>
-                <p className="text-xs text-muted-foreground mt-4">
-                  Lecturer? <button onClick={() => router.push('/login?role=lecturer')} className="text-primary font-bold">Login Here</button>
-                </p>
               </div>
             )}
             {step < onboardingSteps.length - 1 && (
