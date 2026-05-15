@@ -1,21 +1,35 @@
+
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Sparkles, Mail, Lock, Fingerprint } from "lucide-react"
+import { Sparkles, Mail, Lock, Fingerprint, GraduationCap, User } from "lucide-react"
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(false)
+  const [role, setRole] = useState<'student' | 'lecturer'>('student')
+
+  useEffect(() => {
+    const roleParam = searchParams.get('role')
+    if (roleParam === 'lecturer') {
+      setRole('lecturer')
+    }
+  }, [searchParams])
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setTimeout(() => {
-      router.push('/home')
+      if (role === 'lecturer') {
+        router.push('/lecturer')
+      } else {
+        router.push('/home')
+      }
     }, 1000)
   }
 
@@ -24,19 +38,40 @@ export default function LoginPage() {
       <div className="flex-1 flex flex-col pt-12">
         <div className="mb-10 text-center">
           <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-primary/10 text-primary mb-4">
-            <Sparkles className="h-8 w-8" />
+            {role === 'lecturer' ? <GraduationCap className="h-8 w-8" /> : <Sparkles className="h-8 w-8" />}
           </div>
-          <h1 className="text-3xl font-headline font-bold text-secondary">Welcome Back</h1>
-          <p className="text-muted-foreground mt-2 text-lg">Your AI classroom is waiting for you.</p>
+          <h1 className="text-3xl font-headline font-bold text-secondary">
+            {role === 'lecturer' ? "Lecturer Portal" : "Welcome Back"}
+          </h1>
+          <p className="text-muted-foreground mt-2 text-lg">
+            {role === 'lecturer' ? "Manage your AI classroom and students." : "Your AI classroom is waiting for you."}
+          </p>
+        </div>
+
+        <div className="flex bg-muted/50 p-1 rounded-xl mb-8">
+          <button 
+            onClick={() => setRole('student')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold rounded-lg transition-all ${role === 'student' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
+          >
+            <User className="h-4 w-4" /> Student
+          </button>
+          <button 
+            onClick={() => setRole('lecturer')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold rounded-lg transition-all ${role === 'lecturer' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
+          >
+            <GraduationCap className="h-4 w-4" /> Lecturer
+          </button>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="id" className="text-sm font-semibold ml-1">Student ID or Email</Label>
+              <Label htmlFor="id" className="text-sm font-semibold ml-1">
+                {role === 'lecturer' ? "Employee ID or Email" : "Student ID or Email"}
+              </Label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input id="id" placeholder="Ex: VU2024001" className="h-14 pl-12 rounded-2xl bg-white border-2 focus:border-primary transition-all text-lg" />
+                <Input id="id" placeholder={role === 'lecturer' ? "Ex: PROF2024001" : "Ex: VU2024001"} className="h-14 pl-12 rounded-2xl bg-white border-2 focus:border-primary transition-all text-lg" />
               </div>
             </div>
             <div className="space-y-2">
@@ -52,7 +87,7 @@ export default function LoginPage() {
           </div>
 
           <Button type="submit" size="lg" disabled={isLoading} className="w-full h-14 rounded-2xl text-lg font-semibold shadow-xl shadow-primary/20">
-            {isLoading ? "Signing in..." : "Login to Vani"}
+            {isLoading ? "Signing in..." : `Login to Vani as ${role === 'lecturer' ? 'Lecturer' : 'Student'}`}
           </Button>
         </form>
 
@@ -88,5 +123,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   )
 }
