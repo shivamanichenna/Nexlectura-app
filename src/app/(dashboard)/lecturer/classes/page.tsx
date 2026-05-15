@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Users, BookOpen, ChevronRight, GraduationCap, CheckCircle, Clock } from "lucide-react"
+import { Plus, Search, Users, BookOpen, ChevronRight, GraduationCap, CheckCircle } from "lucide-react"
 
 export default function ClassManagementPage() {
   const [classes] = useState([
-    { id: 1, name: "CSE-A", subject: "Operating Systems", year: "3rd Year", students: 64, code: "CS2401", attendance: "92%" },
-    { id: 2, name: "EC-B", subject: "Microprocessors", year: "2nd Year", students: 58, code: "EC1205", attendance: "88%" },
-    { id: 3, name: "MBA-I", subject: "Organizational Behavior", year: "1st Year", students: 42, code: "MB1011", attendance: "95%" },
+    { id: 1, name: "CSE-A", subject: "Operating Systems", year: "3rd Year", students: 64, code: "CS2401" },
+    { id: 2, name: "EC-B", subject: "Microprocessors", year: "2nd Year", students: 58, code: "EC1205" },
+    { id: 3, name: "MBA-I", subject: "Organizational Behavior", year: "1st Year", students: 42, code: "MB1011" },
   ])
 
   return (
@@ -23,18 +23,6 @@ export default function ClassManagementPage() {
           <Plus className="h-4 w-4" /> Create
         </Button>
       </div>
-
-      {/* Attendance Integration (Feature 15 Baseline) */}
-      <Card className="rounded-[2rem] border-none bg-emerald-50 p-6 flex items-center gap-4">
-         <div className="h-12 w-12 bg-white rounded-2xl flex items-center justify-center text-emerald-500 shadow-sm shrink-0">
-           <CheckCircle className="h-6 w-6" />
-         </div>
-         <div className="flex-1">
-            <h4 className="font-bold text-emerald-800 text-sm">Attendance Smart-Scan</h4>
-            <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wide">98% Data Sync Complete</p>
-         </div>
-         <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg h-8 text-[10px] font-bold">QR Roll Call</Button>
-      </Card>
 
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -55,8 +43,7 @@ export default function ClassManagementPage() {
                 </div>
                 <p className="text-xs font-bold text-primary uppercase tracking-tight">{cls.subject}</p>
                 <div className="flex items-center gap-3 mt-2 text-[10px] text-muted-foreground font-bold">
-                  <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {cls.students}</span>
-                  <span className="flex items-center gap-1 text-emerald-600"><CheckCircle className="h-3 w-3" /> {cls.attendance} Attend.</span>
+                  <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {cls.students} Students</span>
                   <span>{cls.year}</span>
                 </div>
               </div>

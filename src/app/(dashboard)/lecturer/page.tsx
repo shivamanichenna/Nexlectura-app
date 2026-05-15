@@ -55,11 +55,11 @@ export default function LecturerDashboard() {
             <p className="text-[9px] font-bold uppercase">Open Doubts</p>
           </div>
         </Card>
-        <Card className="min-w-[140px] rounded-2xl border-none bg-emerald-500/10 text-emerald-600 p-4 space-y-2">
+        <Card className="min-w-[140px] rounded-2xl border-none bg-purple-500/10 text-purple-600 p-4 space-y-2">
           <TrendingUp className="h-5 w-5" />
           <div>
-            <p className="text-xl font-bold">92%</p>
-            <p className="text-[9px] font-bold uppercase">Attendance</p>
+            <p className="text-xl font-bold">88%</p>
+            <p className="text-[9px] font-bold uppercase">Engagement</p>
           </div>
         </Card>
       </div>
@@ -146,10 +146,12 @@ export default function LecturerDashboard() {
              </p>
           </div>
         </div>
-        <Button variant="outline" className="w-full h-10 rounded-xl text-xs font-bold border-primary text-primary hover:bg-primary/5">
-          View Detailed Analytics
-          <ArrowRight className="h-3 w-3 ml-2" />
-        </Button>
+        <Link href="/lecturer/insights">
+          <Button variant="outline" className="w-full h-10 rounded-xl text-xs font-bold border-primary text-primary hover:bg-primary/5">
+            View Detailed Analytics
+            <ArrowRight className="h-3 w-3 ml-2" />
+          </Button>
+        </Link>
       </Card>
 
       {/* Syllabus Knowledge Base */}
