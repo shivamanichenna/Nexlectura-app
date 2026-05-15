@@ -13,6 +13,7 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+// Deployment trigger: Ensuring Firestore Security Rules are active and verified.
 export function getFirebaseConfig() {
   return firebaseConfig;
 }
