@@ -1,30 +1,53 @@
+'use client';
 
-"use client"
-
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Search, Play, Clock, BookOpen, ChevronRight, Filter, Bookmark, Upload, AlertCircle } from "lucide-react"
+import { Search, Play, Clock, BookOpen, ChevronRight, Filter, Bookmark, Upload, AlertCircle, Loader2 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { useFirestore, useCollection } from '@/firebase'
+import { collection, query, orderBy, where } from 'firebase/firestore'
+import { formatDistanceToNow } from 'date-fns'
 
 export default function StudyHubPage() {
   const [searchQuery, setSearchQuery] = useState("")
+  const [selectedSubject, setSelectedSubject] = useState<string | null>(null)
+  const db = useFirestore()
 
+  // Define subjects
   const subjects = [
-    { name: "Economics", lectures: 12, color: "bg-orange-500", code: "ECO101" },
-    { name: "Mathematics", lectures: 8, color: "bg-blue-500", code: "MAT202" },
-    { name: "Physics", lectures: 15, color: "bg-purple-500", code: "PHY301" },
-    { name: "DBMS", lectures: 10, color: "bg-emerald-500", code: "CS401" },
+    { name: "Economics", color: "bg-orange-500", code: "ECO101" },
+    { name: "Mathematics", color: "bg-blue-500", code: "MAT202" },
+    { name: "Physics", color: "bg-purple-500", code: "PHY301" },
+    { name: "DBMS", color: "bg-emerald-500", code: "CS401" },
   ]
 
-  const recentLectures = [
-    { id: "1", title: "Banking and Credit Control", subject: "Economics", date: "2h ago", duration: "45m", status: "In Progress" },
-    { id: "2", title: "Matrices & Determinants", subject: "Mathematics", date: "Yesterday", duration: "1h 12m", status: "New" },
-  ]
+  // Memoize the lectures query
+  const lecturesQuery = useMemo(() => {
+    if (!db) return null;
+    let baseQuery = collection(db, 'lectures');
+    
+    if (selectedSubject) {
+      return query(
+        baseQuery,
+        where('subject', '==', selectedSubject),
+        orderBy('createdAt', 'desc')
+      );
+    }
+    
+    return query(baseQuery, orderBy('createdAt', 'desc'));
+  }, [db, selectedSubject]);
+
+  const { data: lectures, loading } = useCollection(lecturesQuery);
+
+  const filteredLectures = lectures?.filter(lec => 
+    lec.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    lec.subject?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="space-y-6 pb-20">
@@ -33,19 +56,23 @@ export default function StudyHubPage() {
         <p className="text-muted-foreground text-sm">Subject-wise learning & assignments.</p>
       </div>
 
-      {/* Smart Search - Feature 9 */}
       <div className="flex gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input 
-            placeholder="Search topics (e.g. 'Semaphore')..." 
+            placeholder="Search topics..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="h-12 pl-12 rounded-2xl bg-muted/50 border-none focus-visible:ring-primary/20" 
           />
         </div>
-        <Button variant="ghost" size="icon" className="h-12 w-12 bg-muted/50 rounded-2xl">
-          <Filter className="h-5 w-5 text-muted-foreground" />
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={() => setSelectedSubject(null)}
+          className={`h-12 w-12 rounded-2xl ${!selectedSubject ? 'bg-primary/10 text-primary' : 'bg-muted/50'}`}
+        >
+          <Filter className="h-5 w-5" />
         </Button>
       </div>
 
@@ -59,13 +86,17 @@ export default function StudyHubPage() {
         <TabsContent value="subjects" className="space-y-8 m-0">
           <div className="grid grid-cols-2 gap-4">
             {subjects.map((sub, i) => (
-              <Card key={i} className="rounded-[2.5rem] border-none bg-white shadow-sm border-2 border-muted hover:border-primary/20 transition-all cursor-pointer group p-5">
+              <Card 
+                key={i} 
+                onClick={() => setSelectedSubject(sub.name)}
+                className={`rounded-[2.5rem] border-none shadow-sm border-2 transition-all cursor-pointer group p-5 ${selectedSubject === sub.name ? 'border-primary bg-primary/5' : 'bg-white border-muted hover:border-primary/20'}`}
+              >
                 <div className={`h-14 w-14 rounded-2xl ${sub.color} flex items-center justify-center text-white shadow-lg mb-4 transition-transform group-hover:scale-110`}>
                   <BookOpen className="h-7 w-7" />
                 </div>
                 <div>
                    <h4 className="font-bold text-secondary leading-tight">{sub.name}</h4>
-                   <p className="text-[10px] text-muted-foreground font-bold uppercase mt-1">{sub.code} • {sub.lectures} Units</p>
+                   <p className="text-[10px] text-muted-foreground font-bold uppercase mt-1">{sub.code}</p>
                 </div>
               </Card>
             ))}
@@ -74,91 +105,66 @@ export default function StudyHubPage() {
           <div className="space-y-4">
             <h3 className="font-headline font-bold text-lg flex items-center gap-2">
               <Clock className="h-5 w-5 text-primary" />
-              Continue Learning
+              {selectedSubject ? `${selectedSubject} Lectures` : 'Continue Learning'}
             </h3>
-            <div className="space-y-3">
-              {recentLectures.map((lec) => (
-                <Link href={`/study/${lec.id}`} key={lec.id}>
-                  <Card className="rounded-[2rem] border-none bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer overflow-hidden border-2 border-muted hover:border-primary/20">
-                    <CardContent className="p-4 flex gap-4">
-                      <div className="relative w-20 h-20 rounded-2xl overflow-hidden shrink-0">
-                        <Image src={`https://picsum.photos/seed/wani-lec-${lec.id}/200/200`} alt="thumb" fill className="object-cover" />
-                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                          <Play className="h-6 w-6 text-white fill-white" />
-                        </div>
-                      </div>
-                      <div className="flex-1 flex flex-col justify-between py-1">
-                        <div>
-                          <div className="flex justify-between items-start">
-                            <h4 className="font-bold text-secondary text-sm leading-tight line-clamp-1">{lec.title}</h4>
-                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-                              lec.status === 'New' ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'
-                            }`}>{lec.status}</span>
+            
+            {loading ? (
+              <div className="flex justify-center p-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : filteredLectures && filteredLectures.length > 0 ? (
+              <div className="space-y-3">
+                {filteredLectures.map((lec: any) => (
+                  <Link href={`/study/${lec.id}`} key={lec.id}>
+                    <Card className="rounded-[2rem] border-none bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer overflow-hidden border-2 border-muted hover:border-primary/20">
+                      <CardContent className="p-4 flex gap-4">
+                        <div className="relative w-20 h-20 rounded-2xl overflow-hidden shrink-0">
+                          <Image src={`https://picsum.photos/seed/${lec.id}/200/200`} alt="thumb" fill className="object-cover" />
+                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                            <Play className="h-6 w-6 text-white fill-white" />
                           </div>
-                          <p className="text-[10px] text-primary font-bold uppercase mt-0.5">{lec.subject}</p>
                         </div>
-                        <div className="flex items-center gap-3 text-[10px] text-muted-foreground font-bold">
-                          <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {lec.duration}</span>
-                          <span>{lec.date}</span>
+                        <div className="flex-1 flex flex-col justify-between py-1">
+                          <div>
+                            <div className="flex justify-between items-start">
+                              <h4 className="font-bold text-secondary text-sm leading-tight line-clamp-1">{lec.title}</h4>
+                              {lec.status === 'processing' && (
+                                <Badge variant="secondary" className="text-[8px] h-4 uppercase">Processing</Badge>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-primary font-bold uppercase mt-0.5">{lec.subject}</p>
+                          </div>
+                          <div className="flex items-center gap-3 text-[10px] text-muted-foreground font-bold">
+                            <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> Audio</span>
+                            <span>
+                              {lec.createdAt ? formatDistanceToNow(lec.createdAt.toDate(), { addSuffix: true }) : 'Just now'}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center p-8 bg-muted/20 rounded-3xl">
+                <p className="text-sm text-muted-foreground">No lectures found for this criteria.</p>
+              </div>
+            )}
           </div>
         </TabsContent>
 
         <TabsContent value="assignments" className="space-y-4">
-           {[
-             { title: "Money Multiplier Report", due: "Tomorrow", subject: "Economics", progress: 65, status: "Urgent" },
-             { title: "SQL Queries: Unit 2", due: "Oct 24", subject: "DBMS", progress: 10, status: "On Track" },
-           ].map((task, i) => (
-             <Card key={i} className="rounded-3xl border-2 border-muted p-5 space-y-4 bg-white">
-                <div className="flex justify-between items-start">
-                   <div>
-                      <h4 className="font-bold text-secondary text-sm">{task.title}</h4>
-                      <p className="text-[10px] text-primary font-bold uppercase mt-0.5">{task.subject}</p>
-                   </div>
-                   <Badge variant={task.status === 'Urgent' ? 'destructive' : 'secondary'} className="text-[9px] h-4">{task.status}</Badge>
-                </div>
-                <div className="space-y-2">
-                   <Progress value={task.progress} className="h-1.5 bg-muted" />
-                   <div className="flex justify-between text-[10px] font-bold text-muted-foreground">
-                      <span>{task.progress}% Done</span>
-                      <span>Due {task.due}</span>
-                   </div>
-                </div>
-                <div className="flex gap-2">
-                   <Button variant="outline" className="flex-1 rounded-xl h-10 text-xs font-bold border-primary text-primary">Resume</Button>
-                   <Button variant="ghost" size="icon" className="h-10 w-10 bg-muted/50 rounded-xl"><Upload className="h-4 w-4" /></Button>
-                </div>
-             </Card>
-           ))}
+           <div className="text-center p-12 opacity-50">
+             <BookOpen className="h-10 w-10 mx-auto mb-2" />
+             <p className="text-sm">Your weekly assignments will appear here.</p>
+           </div>
         </TabsContent>
 
         <TabsContent value="saved" className="space-y-4">
-           {[
-             { title: "Macro-Dynamics: Summary", type: "AI Note", date: "Oct 12" },
-             { title: "Supply Curve Breakdown", type: "Bookmark", date: "Oct 08" },
-           ].map((item, i) => (
-             <Card key={i} className="rounded-3xl border-none bg-accent/30 p-5 flex items-center gap-4 group cursor-pointer hover:bg-accent/50 transition-colors">
-                <div className="h-12 w-12 bg-white rounded-2xl flex items-center justify-center text-primary shadow-sm">
-                  <Bookmark className="h-6 w-6 fill-current" />
-                </div>
-                <div className="flex-1">
-                   <h4 className="font-bold text-sm text-secondary">{item.title}</h4>
-                   <p className="text-[10px] text-muted-foreground font-bold uppercase">{item.type} • {item.date}</p>
-                </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
-             </Card>
-           ))}
-           <div className="bg-blue-50 p-5 rounded-3xl border border-blue-100 flex gap-4">
-              <AlertCircle className="h-6 w-6 text-blue-500 shrink-0" />
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                You can save lectures for **Offline Access** from the player. These will appear here when you are offline.
-              </p>
+           <div className="text-center p-12 opacity-50">
+             <Bookmark className="h-10 w-10 mx-auto mb-2" />
+             <p className="text-sm">Saved snippets and notes will appear here.</p>
            </div>
         </TabsContent>
       </Tabs>
