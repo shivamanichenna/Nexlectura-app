@@ -3,22 +3,22 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Upload, Users, GraduationCap, BarChart3, UserCircle, CheckCircle2 } from "lucide-react"
+import { LayoutDashboard, Upload, Users, GraduationCap, BarChart3, Bell, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
   { name: "Dash", icon: LayoutDashboard, path: "/lecturer" },
   { name: "Classes", icon: GraduationCap, path: "/lecturer/classes" },
-  { name: "Upload", icon: Upload, path: "/lecturer/upload" },
+  { name: "AI Tools", icon: Sparkles, path: "/lecturer/ai-assistant" },
   { name: "Stats", icon: BarChart3, path: "/lecturer/insights" },
-  { name: "Profile", icon: UserCircle, path: "/profile" },
+  { name: "Alerts", icon: Bell, path: "/lecturer/notifications" },
 ]
 
 export function LecturerNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-secondary text-white pb-safe pt-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-secondary text-white pb-safe pt-2 shadow-2xl">
       <div className="flex items-center justify-around max-w-lg mx-auto px-4 h-14">
         {navItems.map((item) => {
           const isActive = pathname === item.path
