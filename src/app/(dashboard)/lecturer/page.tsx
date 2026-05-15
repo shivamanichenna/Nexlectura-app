@@ -23,7 +23,7 @@ import {
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useFirestore, useUser, useCollection } from '@/firebase'
-import { collection, query, where, orderBy, addDoc, serverTimestamp } from 'firebase/firestore'
+import { collection, query, where, addDoc, serverTimestamp } from 'firebase/firestore'
 import { useToast } from "@/hooks/use-toast"
 
 export default function LecturerDashboard() {
@@ -33,16 +33,26 @@ export default function LecturerDashboard() {
   const { toast } = useToast()
   const [isSeeding, setIsSeeding] = useState(false)
 
+  // Simplified query: No orderBy to avoid composite index requirement
   const lecturesQuery = useMemo(() => {
     if (!db || !user) return null
     return query(
       collection(db, 'lectures'),
-      where('lecturerId', '==', user.uid),
-      orderBy('createdAt', 'desc')
+      where('lecturerId', '==', user.uid)
     )
   }, [db, user])
 
-  const { data: lectures, loading } = useCollection(lecturesQuery)
+  const { data: rawLectures, loading } = useCollection(lecturesQuery)
+
+  // Sort in memory instead of in the query
+  const lectures = useMemo(() => {
+    if (!rawLectures) return []
+    return [...rawLectures].sort((a, b) => {
+      const timeA = a.createdAt?.seconds || 0
+      const timeB = b.createdAt?.seconds || 0
+      return timeB - timeA
+    })
+  }, [rawLectures])
 
   const seedDemoData = async () => {
     if (!db || !user) return
