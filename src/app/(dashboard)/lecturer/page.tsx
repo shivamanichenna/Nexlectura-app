@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from "react"
@@ -22,10 +23,12 @@ import {
   FileAudio
 } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useFirestore, useUser, useCollection } from '@/firebase'
 import { collection, query, where, orderBy } from 'firebase/firestore'
 
 export default function LecturerDashboard() {
+  const router = useRouter()
   const db = useFirestore()
   const { user } = useUser()
 
@@ -49,7 +52,12 @@ export default function LecturerDashboard() {
           <h2 className="text-muted-foreground font-medium text-sm">Welcome back,</h2>
           <h1 className="text-2xl font-headline font-bold text-secondary">Prof. S. Murali Krishna</h1>
         </div>
-        <Button size="icon" variant="ghost" className="rounded-full bg-muted/50">
+        <Button 
+          size="icon" 
+          variant="ghost" 
+          className="rounded-full bg-muted/50"
+          onClick={() => router.push('/profile')}
+        >
           <Settings className="h-5 w-5" />
         </Button>
       </div>
