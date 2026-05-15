@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
 import { 
   Play, 
   Pause, 
@@ -66,7 +67,7 @@ export default function LecturePlayerPage() {
     setIsGenerating(true)
     try {
       // For now we use a fallback transcript if real transcription isn't available
-      const transcript = "Today we explore the law of demand. As price increases, demand falls. This inverse relationship is key to market dynamics.";
+      const transcript = lecture.transcript || "Today we explore the law of demand. As price increases, demand falls. This inverse relationship is key to market dynamics.";
       
       const [notes, subtitles] = await Promise.all([
         autoLectureNotesSummary({ lectureTranscript: transcript }),
