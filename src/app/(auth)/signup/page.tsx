@@ -19,12 +19,12 @@ import {
   BookOpen,
   Hash
 } from 'lucide-react';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, AuthError } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -53,31 +53,59 @@ export default function SignupPage() {
       const user = userCredential.user;
 
       // 1. Create User Document
-      const userRef = doc(db, 'users', user.uid);
-      await setDoc(userRef, {
+      const userData = {
         uid: user.uid,
         email: email,
         role: role
-      });
+      };
+      
+      const userRef = doc(db, 'users', user.uid);
+      setDoc(userRef, userData)
+        .catch(async (err) => {
+          const permissionError = new FirestorePermissionError({
+            path: userRef.path,
+            operation: 'create',
+            requestResourceData: userData
+          } satisfies SecurityRuleContext);
+          errorEmitter.emit('permission-error', permissionError);
+        });
 
       // 2. Create Profile Document
       if (role === 'lecturer') {
-        const lecturerRef = doc(db, 'lecturers', user.uid);
-        await setDoc(lecturerRef, {
+        const profileData = {
           name,
           department,
           subjects: subjects.split(',').map(s => s.trim()),
           college
-        });
+        };
+        const lecturerRef = doc(db, 'lecturers', user.uid);
+        setDoc(lecturerRef, profileData)
+          .catch(async (err) => {
+            const permissionError = new FirestorePermissionError({
+              path: lecturerRef.path,
+              operation: 'create',
+              requestResourceData: profileData
+            } satisfies SecurityRuleContext);
+            errorEmitter.emit('permission-error', permissionError);
+          });
       } else {
-        const studentRef = doc(db, 'students', user.uid);
-        await setDoc(studentRef, {
+        const profileData = {
           name,
           department,
           semester,
           section,
           college
-        });
+        };
+        const studentRef = doc(db, 'students', user.uid);
+        setDoc(studentRef, profileData)
+          .catch(async (err) => {
+            const permissionError = new FirestorePermissionError({
+              path: studentRef.path,
+              operation: 'create',
+              requestResourceData: profileData
+            } satisfies SecurityRuleContext);
+            errorEmitter.emit('permission-error', permissionError);
+          });
       }
 
       toast({
@@ -91,11 +119,11 @@ export default function SignupPage() {
 
       router.push(role === 'lecturer' ? '/lecturer' : '/home');
     } catch (error: any) {
-      console.error(error);
+      const authError = error as AuthError;
       toast({
         variant: "destructive",
         title: "Signup failed",
-        description: error.message || "An error occurred during registration.",
+        description: authError.message || "An error occurred during registration.",
       });
     } finally {
       setIsLoading(false);
@@ -115,12 +143,14 @@ export default function SignupPage() {
 
         <div className="flex bg-muted/50 p-1 rounded-xl mb-8">
           <button 
+            type="button"
             onClick={() => setRole('student')}
             className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold rounded-lg transition-all ${role === 'student' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
           >
             <User className="h-4 w-4" /> Student
           </button>
           <button 
+            type="button"
             onClick={() => setRole('lecturer')}
             className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold rounded-lg transition-all ${role === 'lecturer' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
           >
