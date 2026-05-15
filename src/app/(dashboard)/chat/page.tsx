@@ -1,22 +1,33 @@
+
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { 
   Send, 
   Mic, 
   Image as ImageIcon, 
   Sparkles, 
-  ArrowLeft,
   Search,
   Book,
   Lightbulb,
-  MoreVertical
+  MoreVertical,
+  Loader2,
+  BookOpen
 } from "lucide-react"
 import { aiDoubtAssistant } from "@/ai/flows/ai-doubt-assistant-flow"
+import { useFirestore, useCollection } from '@/firebase'
+import { collection, query, orderBy } from 'firebase/firestore'
 
 type Message = {
   id: string
@@ -29,14 +40,29 @@ export default function AIDoubtAssistant() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isTyping, setIsTyping] = useState(false)
+  const [selectedLectureId, setSelectedLectureId] = useState<string>("")
   const scrollRef = useRef<HTMLDivElement>(null)
+  
+  const db = useFirestore()
 
-  // Initialize first message after mount to avoid hydration mismatch with new Date()
+  // Fetch lectures for context selection
+  const lecturesQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'lectures'), orderBy('createdAt', 'desc'));
+  }, [db]);
+
+  const { data: lectures, loading: lecturesLoading } = useCollection(lecturesQuery);
+
+  const selectedLecture = useMemo(() => {
+    return lectures?.find(l => l.id === selectedLectureId);
+  }, [lectures, selectedLectureId]);
+
+  // Initialize first message
   useEffect(() => {
     setMessages([
       {
         id: '1',
-        text: "Hi Arjun! I'm Vani, your AI classroom companion. Ask me anything about your current Macroeconomics lecture. I can explain in English or Telugu!",
+        text: "Hi Arjun! I'm Vani, your AI classroom companion. Select a lecture from the dropdown above and ask me anything about it. I can explain in English or Telugu!",
         sender: 'ai',
         timestamp: new Date()
       }
@@ -64,9 +90,12 @@ export default function AIDoubtAssistant() {
     setIsTyping(true)
 
     try {
+      // Use actual lecture content if available, otherwise a helpful fallback
+      const contextContent = selectedLecture?.transcript || selectedLecture?.title || "General classroom context.";
+      
       const response = await aiDoubtAssistant({
         question: input,
-        lectureContent: "Macroeconomics: Supply and Demand. Fundamental Law: Price up, Demand down. Examples: Movie tickets, Apple prices.",
+        lectureContent: contextContent,
         userLearningStyle: 'mixed',
         preferredLanguage: 'English-Telugu mix',
         chatHistory: messages.map(m => `${m.sender === 'user' ? 'User' : 'AI'}: ${m.text}`)
@@ -81,6 +110,13 @@ export default function AIDoubtAssistant() {
       setMessages(prev => [...prev, aiMsg])
     } catch (error) {
       console.error(error)
+      const errorMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "I'm sorry, I hit a snag while processing that. Could you try asking again?",
+        sender: 'ai',
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, errorMsg])
     } finally {
       setIsTyping(false)
     }
@@ -89,23 +125,56 @@ export default function AIDoubtAssistant() {
   return (
     <div className="flex flex-col h-[85vh] -mt-4">
       {/* Header */}
-      <div className="flex items-center justify-between py-4 border-b">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Avatar className="h-10 w-10 border-2 border-primary/20">
-              <AvatarImage src="https://picsum.photos/seed/wani-ai/100/100" />
-              <AvatarFallback>V</AvatarFallback>
-            </Avatar>
-            <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-background" />
+      <div className="flex flex-col border-b pb-4">
+        <div className="flex items-center justify-between py-2">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Avatar className="h-10 w-10 border-2 border-primary/20">
+                <AvatarImage src="https://picsum.photos/seed/wani-ai/100/100" />
+                <AvatarFallback>V</AvatarFallback>
+              </Avatar>
+              <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-background" />
+            </div>
+            <div>
+              <h2 className="font-headline font-bold text-secondary text-sm">Vani AI Assistant</h2>
+              <p className="text-[10px] text-green-500 font-bold uppercase tracking-wider">Online & Thinking</p>
+            </div>
           </div>
-          <div>
-            <h2 className="font-headline font-bold text-secondary text-sm">Vani AI Assistant</h2>
-            <p className="text-[10px] text-green-500 font-bold uppercase tracking-wider">Online & Thinking</p>
+          <div className="flex gap-2">
+             <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground"><MoreVertical className="h-5 w-5" /></Button>
           </div>
         </div>
-        <div className="flex gap-2">
-           <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground"><Search className="h-5 w-5" /></Button>
-           <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground"><MoreVertical className="h-5 w-5" /></Button>
+
+        {/* Lecture Context Selector */}
+        <div className="px-1 mt-1">
+          <Select value={selectedLectureId} onValueChange={setSelectedLectureId}>
+            <SelectTrigger className="h-10 rounded-xl bg-muted/30 border-none text-xs font-bold">
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-3.5 w-3.5 text-primary" />
+                <SelectValue placeholder="Select Lecture Context" />
+              </div>
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-muted">
+              {lecturesLoading ? (
+                <div className="flex items-center justify-center p-4">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                </div>
+              ) : lectures && lectures.length > 0 ? (
+                lectures.map((lec: any) => (
+                  <SelectItem key={lec.id} value={lec.id} className="text-xs">
+                    {lec.title} ({lec.subject})
+                  </SelectItem>
+                ))
+              ) : (
+                <div className="p-4 text-center text-[10px] text-muted-foreground">No lectures available</div>
+              )}
+            </SelectContent>
+          </Select>
+          {selectedLecture && (
+            <p className="text-[9px] text-muted-foreground mt-1.5 ml-1 font-medium">
+              Chatting about: <span className="text-primary font-bold">{selectedLecture.title}</span>
+            </p>
+          )}
         </div>
       </div>
 
@@ -158,7 +227,13 @@ export default function AIDoubtAssistant() {
            { label: "Exam Answer", icon: Lightbulb },
            { label: "Telugu Explain", icon: Book },
          ].map((item, idx) => (
-           <Button key={idx} variant="outline" size="sm" className="whitespace-nowrap rounded-full h-8 text-[11px] font-bold gap-1.5 border-muted">
+           <Button 
+             key={idx} 
+             variant="outline" 
+             size="sm" 
+             onClick={() => setInput(prev => prev + (prev ? " " : "") + item.label)}
+             className="whitespace-nowrap rounded-full h-8 text-[11px] font-bold gap-1.5 border-muted"
+           >
              <item.icon className="h-3 w-3 text-primary" />
              {item.label}
            </Button>
@@ -173,7 +248,7 @@ export default function AIDoubtAssistant() {
           </Button>
           <div className="flex-1 relative">
             <Input 
-              placeholder="Ask a doubt..." 
+              placeholder={selectedLectureId ? "Ask a doubt about this lecture..." : "Select a lecture first..."}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
@@ -185,7 +260,7 @@ export default function AIDoubtAssistant() {
           </div>
           <Button 
             onClick={handleSend}
-            disabled={!input.trim()}
+            disabled={!input.trim() || isTyping}
             className="shrink-0 h-12 w-12 rounded-2xl shadow-lg shadow-primary/20"
           >
             <Send className="h-5 w-5 fill-current" />

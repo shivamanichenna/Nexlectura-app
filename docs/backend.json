@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "User": {
@@ -101,6 +102,10 @@
         },
         "audioUrl": {
           "type": "string"
+        },
+        "transcript": {
+          "type": "string",
+          "description": "AI generated transcript of the lecture audio"
         },
         "lecturerId": {
           "type": "string"
