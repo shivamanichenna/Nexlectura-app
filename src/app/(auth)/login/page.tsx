@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Sparkles, Mail, Lock, GraduationCap, User, Loader2, AlertCircle } from "lucide-react"
+import { Sparkles, Mail, Lock, GraduationCap, User, Loader2, AlertCircle, Info } from "lucide-react"
 import { signInWithEmailAndPassword, AuthError } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase';
@@ -46,7 +46,6 @@ function LoginForm() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Fetch user role from Firestore
       const userDocRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userDocRef).catch(err => {
         const permissionError = new FirestorePermissionError({
@@ -81,26 +80,23 @@ function LoginForm() {
       }
     } catch (error: any) {
       const authError = error as AuthError;
-      
       if (authError.code === 'auth/configuration-not-found') {
-        setConfigError("Authentication is not yet configured. Please enable 'Email/Password' in your Firebase Console (Authentication > Sign-in method).");
-      } else if (authError.code === 'auth/invalid-credential') {
+        setConfigError("Authentication is not yet configured. Please enable 'Email/Password' in your Firebase Console.");
+      } else {
         toast({
           variant: "destructive",
           title: "Login failed",
-          description: "Invalid email or password. Please try again.",
-        });
-      } else if (error.message?.includes('offline')) {
-        // Handled by global listener but we also show a toast
-        toast({
-          variant: "destructive",
-          title: "Database Offline",
-          description: "Could not reach Firestore. Please check your internet and Firebase Console.",
+          description: "Invalid email or password. If you haven't created an account, use the Signup button below.",
         });
       }
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const fillDemo = () => {
+    setEmail(role === 'lecturer' ? 'lecturer@vani.ai' : 'student@vani.ai')
+    setPassword('password123')
   }
 
   return (
@@ -113,20 +109,30 @@ function LoginForm() {
           <h1 className="text-3xl font-headline font-bold text-secondary">
             {role === 'lecturer' ? "Lecturer Portal" : "Welcome Back"}
           </h1>
-          <p className="text-muted-foreground mt-2 text-lg leading-tight">
-            {role === 'lecturer' ? "Manage your AI classroom." : "Your AI classroom is waiting."}
-          </p>
         </div>
 
         {configError && (
           <Alert variant="destructive" className="mb-6 rounded-2xl border-2">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Configuration Required</AlertTitle>
+            <AlertTitle>Setup Required</AlertTitle>
             <AlertDescription className="text-xs">
               {configError}
             </AlertDescription>
           </Alert>
         )}
+
+        <div className="bg-accent/50 p-4 rounded-2xl mb-6 border border-primary/10 flex items-start gap-3">
+          <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="text-xs font-bold text-secondary">Demo Mode Instructions:</p>
+            <p className="text-[10px] text-muted-foreground leading-tight">
+              1. Click <button onClick={() => router.push('/signup')} className="text-primary font-bold">Sign Up</button> to create your accounts.<br/>
+              2. Recommended emails: <b>lecturer@vani.ai</b> and <b>student@vani.ai</b>.<br/>
+              3. Use any password (e.g., <b>password123</b>).
+            </p>
+            <button onClick={fillDemo} className="text-[10px] text-primary font-bold underline mt-1">Auto-fill Demo Emails</button>
+          </div>
+        </div>
 
         <div className="flex bg-muted/50 p-1 rounded-xl mb-8">
           <button 
@@ -180,14 +186,7 @@ function LoginForm() {
           </div>
 
           <Button type="submit" size="lg" disabled={isLoading} className="w-full h-14 rounded-2xl text-lg font-semibold shadow-xl shadow-primary/20">
-            {isLoading ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                Signing in...
-              </>
-            ) : (
-              `Login as ${role === 'lecturer' ? 'Lecturer' : 'Student'}`
-            )}
+            {isLoading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : `Login as ${role === 'lecturer' ? 'Lecturer' : 'Student'}`}
           </Button>
         </form>
       </div>

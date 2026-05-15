@@ -10,29 +10,29 @@ import {
   Users, 
   MessageCircle, 
   TrendingUp, 
-  Plus, 
   Play, 
-  Clock,
   Calendar,
   CheckCircle2,
-  BookOpen,
   ArrowRight,
   Settings,
   Sparkles,
   Loader2,
-  FileAudio
+  FileAudio,
+  Database
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useFirestore, useUser, useCollection } from '@/firebase'
-import { collection, query, where, orderBy } from 'firebase/firestore'
+import { collection, query, where, orderBy, addDoc, serverTimestamp } from 'firebase/firestore'
+import { useToast } from "@/hooks/use-toast"
 
 export default function LecturerDashboard() {
   const router = useRouter()
   const db = useFirestore()
   const { user } = useUser()
+  const { toast } = useToast()
+  const [isSeeding, setIsSeeding] = useState(false)
 
-  // Memoize the query to fetch lectures for the current lecturer
   const lecturesQuery = useMemo(() => {
     if (!db || !user) return null
     return query(
@@ -44,6 +44,57 @@ export default function LecturerDashboard() {
 
   const { data: lectures, loading } = useCollection(lecturesQuery)
 
+  const seedDemoData = async () => {
+    if (!db || !user) return
+    setIsSeeding(true)
+    
+    const demoLectures = [
+      {
+        title: "Introduction to Macroeconomics",
+        subject: "Economics",
+        semester: "4th",
+        section: "CSE-A",
+        audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+        transcript: "Welcome to Macroeconomics. Today we study the Gross Domestic Product and its impact on national wealth. GDP measures the value of all finished goods produced within a country's borders in a specific time period.",
+        lecturerId: user.uid,
+        lecturerName: "Prof. S. Murali Krishna",
+        status: 'completed',
+        createdAt: serverTimestamp()
+      },
+      {
+        title: "The Indian Banking System",
+        subject: "Economics",
+        semester: "4th",
+        section: "CSE-A",
+        audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+        transcript: "The banking system in India consists of the central bank, which is the RBI, commercial banks, and cooperative banks. We will look at CRR and SLR requirements today.",
+        lecturerId: user.uid,
+        lecturerName: "Prof. S. Murali Krishna",
+        status: 'completed',
+        createdAt: serverTimestamp()
+      }
+    ]
+
+    try {
+      for (const lecture of demoLectures) {
+        await addDoc(collection(db, 'lectures'), lecture)
+      }
+      toast({
+        title: "Demo data seeded!",
+        description: "Your dashboard is now populated with sample lectures.",
+      })
+    } catch (e) {
+      console.error(e)
+      toast({
+        variant: "destructive",
+        title: "Seed failed",
+        description: "Check your database connection or rules.",
+      })
+    } finally {
+      setIsSeeding(false)
+    }
+  }
+
   return (
     <div className="space-y-6 pb-20">
       {/* Header */}
@@ -52,14 +103,26 @@ export default function LecturerDashboard() {
           <h2 className="text-muted-foreground font-medium text-sm">Welcome back,</h2>
           <h1 className="text-2xl font-headline font-bold text-secondary">Prof. S. Murali Krishna</h1>
         </div>
-        <Button 
-          size="icon" 
-          variant="ghost" 
-          className="rounded-full bg-muted/50"
-          onClick={() => router.push('/profile')}
-        >
-          <Settings className="h-5 w-5" />
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="rounded-xl border-primary text-primary font-bold gap-2"
+            onClick={seedDemoData}
+            disabled={isSeeding}
+          >
+            {isSeeding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Database className="h-4 w-4" />}
+            Seed Demo
+          </Button>
+          <Button 
+            size="icon" 
+            variant="ghost" 
+            className="rounded-full bg-muted/50"
+            onClick={() => router.push('/profile')}
+          >
+            <Settings className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
 
       {/* Quick Stats Banner */}
@@ -132,36 +195,36 @@ export default function LecturerDashboard() {
         ) : lectures && lectures.length > 0 ? (
           <div className="grid gap-3">
             {lectures.map((lecture: any) => (
-              <Card key={lecture.id} className="rounded-2xl border-2 border-muted overflow-hidden hover:border-primary/20 transition-all group">
-                <CardContent className="p-4 flex items-center gap-4">
-                  <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
-                    <Play className="h-6 w-6 fill-current" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-sm text-secondary truncate">{lecture.title}</h4>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <Badge variant="outline" className="text-[9px] h-4 py-0 uppercase font-bold">{lecture.subject}</Badge>
-                      <span className="text-[10px] text-muted-foreground font-bold">{lecture.semester} • {lecture.section}</span>
+              <Link href={`/study/${lecture.id}`} key={lecture.id}>
+                <Card className="rounded-2xl border-2 border-muted overflow-hidden hover:border-primary/20 transition-all group">
+                  <CardContent className="p-4 flex items-center gap-4">
+                    <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:scale-105 transition-transform">
+                      <Play className="h-6 w-6 fill-current" />
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <Badge variant={lecture.status === 'completed' ? 'default' : 'secondary'} className="text-[8px] h-4 uppercase mb-1">
-                      {lecture.status}
-                    </Badge>
-                    <p className="text-[9px] font-bold text-muted-foreground">
-                      {lecture.createdAt?.toDate().toLocaleDateString() || 'Just now'}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-sm text-secondary truncate">{lecture.title}</h4>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <Badge variant="outline" className="text-[9px] h-4 py-0 uppercase font-bold">{lecture.subject}</Badge>
+                        <span className="text-[10px] text-muted-foreground font-bold">{lecture.semester} • {lecture.section}</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Badge variant={lecture.status === 'completed' ? 'default' : 'secondary'} className="text-[8px] h-4 uppercase mb-1">
+                        {lecture.status}
+                      </Badge>
+                      <p className="text-[9px] font-bold text-muted-foreground">
+                        {lecture.createdAt?.toDate().toLocaleDateString() || 'Just now'}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         ) : (
           <Card className="rounded-2xl border-2 border-dashed border-muted p-8 text-center bg-muted/5">
             <p className="text-sm font-medium text-muted-foreground">No lectures uploaded yet.</p>
-            <Link href="/lecturer/upload">
-              <Button variant="link" className="text-primary font-bold mt-2">Upload your first lecture</Button>
-            </Link>
+            <Button variant="link" onClick={seedDemoData} className="text-primary font-bold mt-2">Seed demo lectures</Button>
           </Card>
         )}
       </div>
