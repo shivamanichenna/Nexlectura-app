@@ -26,17 +26,22 @@ type Message = {
 }
 
 export default function AIDoubtAssistant() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: "Hi Arjun! I'm Vani, your AI classroom companion. Ask me anything about your current Macroeconomics lecture. I can explain in English or Telugu!",
-      sender: 'ai',
-      timestamp: new Date()
-    }
-  ])
+  const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isTyping, setIsTyping] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Initialize first message after mount to avoid hydration mismatch with new Date()
+  useEffect(() => {
+    setMessages([
+      {
+        id: '1',
+        text: "Hi Arjun! I'm Vani, your AI classroom companion. Ask me anything about your current Macroeconomics lecture. I can explain in English or Telugu!",
+        sender: 'ai',
+        timestamp: new Date()
+      }
+    ])
+  }, [])
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -59,7 +64,6 @@ export default function AIDoubtAssistant() {
     setIsTyping(true)
 
     try {
-      // Using the real AI flow
       const response = await aiDoubtAssistant({
         question: input,
         lectureContent: "Macroeconomics: Supply and Demand. Fundamental Law: Price up, Demand down. Examples: Movie tickets, Apple prices.",
@@ -126,7 +130,7 @@ export default function AIDoubtAssistant() {
                     {msg.text}
                   </div>
                   <p className={`text-[10px] text-muted-foreground ${msg.sender === 'user' ? 'text-right' : 'text-left'}`}>
-                    {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {msg.timestamp?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
               </div>

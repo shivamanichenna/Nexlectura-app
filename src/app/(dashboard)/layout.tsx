@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -12,14 +11,19 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
-  const [isLecturer, setIsLecturer] = useState(false)
+  // Initialize based on pathname which is stable between server/client
+  const [isLecturer, setIsLecturer] = useState(pathname.includes('/lecturer'))
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    // Determine if the user is a lecturer based on path or persisted role
-    const hasLecturerPath = pathname.includes('/lecturer')
-    const savedRole = typeof window !== 'undefined' ? localStorage.getItem('vani-role') : null
-    
-    setIsLecturer(hasLecturerPath || savedRole === 'lecturer')
+    setMounted(true)
+    // Refine role based on local storage only after mounting
+    const savedRole = localStorage.getItem('vani-role')
+    if (savedRole === 'lecturer' || pathname.includes('/lecturer')) {
+      setIsLecturer(true)
+    } else {
+      setIsLecturer(false)
+    }
   }, [pathname])
 
   return (
@@ -27,7 +31,8 @@ export default function DashboardLayout({
       <main className="max-w-md mx-auto w-full px-4 pt-8 animate-in fade-in duration-500">
         {children}
       </main>
-      {isLecturer ? <LecturerNav /> : <BottomNav />}
+      {/* Render navigation only after mounting to ensure hydration consistency */}
+      {mounted && (isLecturer ? <LecturerNav /> : <BottomNav />)}
     </div>
   )
 }

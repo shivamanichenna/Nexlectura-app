@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -25,10 +24,12 @@ export default function ProfilePage() {
   const router = useRouter()
   const pathname = usePathname()
   const { toast } = useToast()
-  const [isLecturer, setIsLecturer] = useState(false)
+  const [isLecturer, setIsLecturer] = useState(pathname.includes('/lecturer'))
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const savedRole = typeof window !== 'undefined' ? localStorage.getItem('vani-role') : null
+    setMounted(true)
+    const savedRole = localStorage.getItem('vani-role')
     setIsLecturer(pathname.includes('/lecturer') || savedRole === 'lecturer')
   }, [pathname])
 
@@ -39,9 +40,7 @@ export default function ProfilePage() {
     })
     
     // Clear session
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('vani-role')
-    }
+    localStorage.removeItem('vani-role')
 
     setTimeout(() => {
       toast({
@@ -75,6 +74,8 @@ export default function ProfilePage() {
       { icon: Calendar, value: "12d", label: "Streak" },
     ]
   }
+
+  if (!mounted) return null
 
   return (
     <div className="space-y-8 pb-10">
