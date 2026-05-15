@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -14,8 +15,27 @@ import {
   ChevronRight,
   LogOut
 } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useToast } from "@/hooks/use-toast"
 
 export default function ProfilePage() {
+  const router = useRouter()
+  const { toast } = useToast()
+
+  const handleSignOut = () => {
+    toast({
+      title: "Signed out successfully",
+      description: "Come back soon to continue your learning journey!",
+    })
+    router.push("/")
+  }
+
+  const settingsItems = [
+    { icon: Settings, label: "Account Settings", desc: "Security, Privacy, Connected IDs" },
+    { icon: Share2, label: "Refer a classmate", desc: "Get 1 month Vani Pro for free" },
+    { icon: LogOut, label: "Sign Out", desc: "Logout from this device", color: "text-destructive", action: handleSignOut },
+  ]
+
   return (
     <div className="space-y-8 pb-10">
       {/* Profile Header */}
@@ -71,12 +91,12 @@ export default function ProfilePage() {
 
       {/* Settings List */}
       <div className="space-y-3">
-        {[
-          { icon: Settings, label: "Account Settings", desc: "Security, Privacy, Connected IDs" },
-          { icon: Share2, label: "Refer a classmate", desc: "Get 1 month Vani Pro for free" },
-          { icon: LogOut, label: "Sign Out", desc: "Logout from this device", color: "text-destructive" },
-        ].map((item, i) => (
-          <Card key={i} className="rounded-2xl border-none bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer group">
+        {settingsItems.map((item, i) => (
+          <Card 
+            key={i} 
+            className="rounded-2xl border-none bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer group"
+            onClick={item.action}
+          >
             <CardContent className="p-4 flex items-center gap-4">
                <div className={`h-10 w-10 rounded-xl bg-white flex items-center justify-center ${item.color || 'text-muted-foreground'}`}>
                  <item.icon className="h-5 w-5" />
