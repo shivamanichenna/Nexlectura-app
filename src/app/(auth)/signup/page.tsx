@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -52,7 +51,7 @@ export default function SignupPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // 1. Create User Document
+      // 1. Create Core User Document
       const userData = {
         uid: user.uid,
         email: email,
@@ -70,13 +69,14 @@ export default function SignupPage() {
           errorEmitter.emit('permission-error', permissionError);
         });
 
-      // 2. Create Profile Document
+      // 2. Create Role-Specific Profile Document
       if (role === 'lecturer') {
         const profileData = {
           name,
           department,
           subjects: subjects.split(',').map(s => s.trim()),
-          college
+          college,
+          lecturerId: user.uid
         };
         const lecturerRef = doc(db, 'lecturers', user.uid);
         setDoc(lecturerRef, profileData)
@@ -94,7 +94,8 @@ export default function SignupPage() {
           department,
           semester,
           section,
-          college
+          college,
+          studentId: user.uid
         };
         const studentRef = doc(db, 'students', user.uid);
         setDoc(studentRef, profileData)
@@ -117,7 +118,11 @@ export default function SignupPage() {
         localStorage.setItem('vani-role', role);
       }
 
-      router.push(role === 'lecturer' ? '/lecturer' : '/home');
+      // Small delay to allow optimistic Firestore updates to propagate locally
+      setTimeout(() => {
+        router.push(role === 'lecturer' ? '/lecturer' : '/home');
+      }, 500);
+
     } catch (error: any) {
       const authError = error as AuthError;
       toast({
