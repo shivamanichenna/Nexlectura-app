@@ -66,19 +66,28 @@ function LoginForm() {
           router.push('/home');
         }
       } else {
-        throw new Error("User record not found. Please sign up.");
+        toast({
+          variant: "destructive",
+          title: "Access Denied",
+          description: "No profile found for this user. Please sign up first.",
+        });
       }
     } catch (error: any) {
       const authError = error as AuthError;
-      console.error("Login Error:", authError.code, authError.message);
       
       if (authError.code === 'auth/configuration-not-found') {
         setConfigError("Authentication is not yet configured. Please enable 'Email/Password' in your Firebase Console (Authentication > Sign-in method).");
+      } else if (authError.code === 'auth/invalid-credential') {
+        toast({
+          variant: "destructive",
+          title: "Login failed",
+          description: "Invalid email or password. If you don't have an account, please sign up.",
+        });
       } else {
         toast({
           variant: "destructive",
           title: "Login failed",
-          description: authError.message || "Invalid email or password.",
+          description: authError.message || "An unexpected error occurred.",
         });
       }
     } finally {
