@@ -1,113 +1,183 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Sparkles, Zap, Flame, Clock, Play, TrendingDown, BookOpen, MessageSquare } from "lucide-react"
+import { 
+  Sparkles, 
+  Zap, 
+  Flame, 
+  Clock, 
+  Play, 
+  TrendingDown, 
+  BookOpen, 
+  MessageSquare,
+  Calendar,
+  ChevronRight,
+  Lightbulb,
+  ArrowUpRight
+} from "lucide-react"
 import Link from "next/link"
-import Image from "next/image"
+import { Badge } from "@/components/ui/badge"
 
 export default function StudentDashboard() {
+  const [mounted, setMounted] = useState(false)
   const [greeting, setGreeting] = useState("Good morning")
 
   useEffect(() => {
+    setMounted(true)
     const hour = new Date().getHours()
     if (hour >= 12 && hour < 17) setGreeting("Good afternoon")
     else if (hour >= 17) setGreeting("Good evening")
   }, [])
 
+  if (!mounted) return null
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-muted-foreground font-medium">{greeting}, Arjun 👋</h2>
-          <h1 className="text-2xl font-headline font-bold text-secondary">Ready to learn?</h1>
+          <h2 className="text-muted-foreground font-medium text-sm">{greeting}, Arjun 👋</h2>
+          <h1 className="text-2xl font-headline font-bold text-secondary">Your AI Learning Path</h1>
         </div>
-        <div className="bg-primary/10 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+        <Link href="/profile" className="flex items-center gap-1.5 bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20">
           <Flame className="h-5 w-5 text-primary fill-primary" />
           <span className="font-bold text-primary">12</span>
-        </div>
+        </Link>
       </div>
 
-      {/* Hero: Continue Learning */}
-      <Card className="bg-secondary text-white border-none rounded-3xl overflow-hidden relative">
+      {/* Daily Lecture Feed / Active Lesson */}
+      <Card className="bg-secondary text-white border-none rounded-[2.5rem] overflow-hidden relative shadow-2xl shadow-secondary/20">
         <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full -mr-16 -mt-16 blur-2xl" />
-        <CardContent className="p-6 relative z-10 space-y-4">
-          <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-widest">
-            <Zap className="h-4 w-4" />
-            Active Lecture
-          </div>
-          <h3 className="text-xl font-headline font-bold">Introduction to Macroeconomics</h3>
-          <p className="text-white/60 text-sm">Chapter 4: Banking and Credit Control</p>
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs">
-              <span className="text-white/80">32 mins remaining</span>
-              <span className="text-white/80">45%</span>
+        <CardContent className="p-7 relative z-10 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-widest">
+              <Zap className="h-4 w-4" />
+              Live Now
             </div>
-            <Progress value={45} className="h-2 bg-white/20" />
+            <Badge variant="outline" className="border-white/20 text-white text-[10px]">Today's Feed</Badge>
           </div>
-          <Button className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 rounded-xl">
-            <Play className="h-4 w-4 mr-2 fill-current" />
-            Resume Lecture
-          </Button>
+          <div>
+            <h3 className="text-2xl font-headline font-bold">Introduction to Macroeconomics</h3>
+            <p className="text-white/60 text-sm mt-1">Prof. S. Murali Krishna • Chapter 4: Banking</p>
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between text-[11px] font-medium">
+              <span className="text-white/80">32 mins left • Next: "Money Multiplier"</span>
+              <span className="text-white/80">45% Complete</span>
+            </div>
+            <Progress value={45} className="h-2.5 bg-white/10" />
+          </div>
+          <Link href="/study/1">
+            <Button className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-14 rounded-2xl shadow-lg shadow-primary/20 mt-2">
+              <Play className="h-5 w-5 mr-2 fill-current" />
+              Resume Classroom Session
+            </Button>
+          </Link>
         </CardContent>
       </Card>
 
       {/* Quick Access Grid */}
       <div className="grid grid-cols-4 gap-4">
         {[
-          { icon: MessageSquare, label: "Tutor", color: "bg-blue-500", path: "/chat" },
+          { icon: MessageSquare, label: "AI Tutor", color: "bg-blue-500", path: "/chat" },
           { icon: Sparkles, label: "Revision", color: "bg-orange-500", path: "/revision" },
-          { icon: BookOpen, label: "Notes", color: "bg-purple-500", path: "/study" },
+          { icon: BookOpen, label: "Study Hub", color: "bg-purple-500", path: "/study" },
           { icon: Clock, label: "History", color: "bg-emerald-500", path: "/profile" },
         ].map((item, idx) => (
           <Link href={item.path} key={idx} className="flex flex-col items-center gap-2 group">
-            <div className={`h-14 w-14 rounded-2xl ${item.color} flex items-center justify-center text-white shadow-lg transition-transform group-hover:scale-110`}>
+            <div className={`h-14 w-14 rounded-2xl ${item.color} flex items-center justify-center text-white shadow-xl transition-all group-hover:scale-110 group-hover:-rotate-3`}>
               <item.icon className="h-6 w-6" />
             </div>
-            <span className="text-[11px] font-bold text-muted-foreground uppercase">{item.label}</span>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">{item.label}</span>
           </Link>
         ))}
       </div>
 
-      {/* AI Insights: Weak Topics */}
-      <div className="space-y-3">
+      {/* AI Recommendations Section */}
+      <div className="space-y-4">
         <h3 className="font-headline font-bold text-lg flex items-center gap-2">
-          <TrendingDown className="h-5 w-5 text-destructive" />
-          Weak Topics Detected
+          <Lightbulb className="h-5 w-5 text-primary" />
+          AI Study Suggestions
         </h3>
+        <div className="grid grid-cols-1 gap-3">
+          <Card className="rounded-3xl border-none bg-accent/50 p-5 flex items-center gap-4 hover:bg-accent transition-colors cursor-pointer group">
+            <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center text-primary shadow-sm group-hover:scale-105 transition-transform">
+              <Sparkles className="h-6 w-6" />
+            </div>
+            <div className="flex-1">
+              <p className="font-bold text-sm text-secondary">Review "CRR vs SLR" Flashcards</p>
+              <p className="text-xs text-muted-foreground">You struggled with this in the last quiz.</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+          </Card>
+          
+          <Card className="rounded-3xl border-none bg-blue-50/50 p-5 flex items-center gap-4 hover:bg-blue-50 transition-colors cursor-pointer group">
+            <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center text-blue-500 shadow-sm group-hover:scale-105 transition-transform">
+              <BookOpen className="h-6 w-6" />
+            </div>
+            <div className="flex-1">
+              <p className="font-bold text-sm text-secondary">New Summary: Unit 4 Statistics</p>
+              <p className="text-xs text-muted-foreground">Prof. Rao uploaded 2 hours ago.</p>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+          </Card>
+        </div>
+      </div>
+
+      {/* Today's Schedule Feed */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h3 className="font-headline font-bold text-lg flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-secondary" />
+            Today's Feed
+          </h3>
+          <Button variant="link" className="text-xs font-bold text-primary p-0">View All</Button>
+        </div>
         <div className="space-y-3">
           {[
-            { topic: "Quantum Mechanics: Heisenberg's Principle", score: 42, color: "text-destructive" },
-            { topic: "Organic Chemistry: Esterification", score: 58, color: "text-orange-500" },
+            { time: "10:00 AM", title: "Microprocessors", type: "Lecture Uploaded", icon: Play, color: "text-blue-500", bg: "bg-blue-50" },
+            { time: "01:30 PM", title: "Assignment: Unit 3", type: "Deadline Tomorrow", icon: Clock, color: "text-orange-500", bg: "bg-orange-50" },
           ].map((item, idx) => (
-            <Card key={idx} className="rounded-2xl border-2 border-muted hover:border-primary/20 transition-colors">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div>
-                  <p className="font-bold text-sm">{item.topic}</p>
-                  <p className="text-xs text-muted-foreground">Mastery: <span className={item.color}>{item.score}%</span></p>
-                </div>
-                <Button size="sm" variant="outline" className="rounded-lg h-8 text-xs font-bold border-primary text-primary hover:bg-primary/5">
-                  Revise Now
-                </Button>
-              </CardContent>
-            </Card>
+            <div key={idx} className="flex gap-4 items-start">
+               <div className="text-right min-w-[60px] pt-1">
+                 <p className="text-xs font-bold text-secondary">{item.time}</p>
+                 <p className="text-[10px] text-muted-foreground font-bold uppercase">Today</p>
+               </div>
+               <div className="flex-1 bg-white border-2 border-muted rounded-2xl p-4 flex items-center gap-4">
+                 <div className={`h-10 w-10 rounded-xl ${item.bg} ${item.color} flex items-center justify-center`}>
+                    <item.icon className="h-5 w-5" />
+                 </div>
+                 <div className="flex-1">
+                    <p className="text-sm font-bold text-secondary leading-tight">{item.title}</p>
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase mt-0.5">{item.type}</p>
+                 </div>
+                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
+               </div>
+            </div>
           ))}
         </div>
       </div>
 
-      {/* Weekly Goal Progress */}
-      <Card className="rounded-3xl border-none bg-accent/30 shadow-none">
-        <CardContent className="p-6 flex items-center gap-4">
-          <div className="h-16 w-16 rounded-full border-4 border-primary/20 flex items-center justify-center relative">
-             <div className="absolute inset-0 border-t-4 border-primary rounded-full rotate-45" />
-             <span className="font-bold text-primary">72%</span>
+      {/* Progress & Mastery */}
+      <Card className="rounded-[2rem] border-none bg-secondary text-white shadow-xl">
+        <CardContent className="p-6 flex items-center gap-6">
+          <div className="relative h-20 w-20 flex items-center justify-center">
+             <svg className="h-20 w-20 transform -rotate-90">
+                <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-white/10" />
+                <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray="226" strokeDashoffset={226 * (1 - 0.72)} className="text-primary" />
+             </svg>
+             <span className="absolute font-bold text-xl">72%</span>
           </div>
           <div className="flex-1">
-            <h4 className="font-bold text-secondary">Weekly Mastery Goal</h4>
-            <p className="text-sm text-muted-foreground">You are 3 lectures away from your target.</p>
+            <h4 className="font-bold text-lg flex items-center gap-1.5">
+              Growth Mastery
+              <ArrowUpRight className="h-4 w-4 text-emerald-400" />
+            </h4>
+            <p className="text-sm text-white/60">You're in the top 15% of your class this week!</p>
           </div>
         </CardContent>
       </Card>
