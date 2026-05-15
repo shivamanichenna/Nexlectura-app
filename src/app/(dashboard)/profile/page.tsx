@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -19,11 +20,14 @@ import {
 } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
+import { useAuth } from '@/firebase'
+import { signOut } from 'firebase/auth'
 
 export default function ProfilePage() {
   const router = useRouter()
   const pathname = usePathname()
   const { toast } = useToast()
+  const auth = useAuth()
   const [isLecturer, setIsLecturer] = useState(pathname.includes('/lecturer'))
   const [mounted, setMounted] = useState(false)
 
@@ -33,22 +37,31 @@ export default function ProfilePage() {
     setIsLecturer(pathname.includes('/lecturer') || savedRole === 'lecturer')
   }, [pathname])
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    if (!auth) return
+
     toast({
       title: "Signing out...",
       description: "Please wait a moment.",
     })
     
-    // Clear session
-    localStorage.removeItem('vani-role')
+    try {
+      await signOut(auth)
+      // Clear local session state
+      localStorage.removeItem('vani-role')
 
-    setTimeout(() => {
       toast({
         title: "Signed out successfully",
         description: "Come back soon to continue your journey!",
       })
       router.push("/")
-    }, 800)
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Sign out failed",
+        description: error.message || "An error occurred during sign out.",
+      })
+    }
   }
 
   const settingsItems = [
