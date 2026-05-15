@@ -18,7 +18,9 @@ import {
   Bookmark,
   BookmarkCheck,
   Download,
-  Share2
+  Share2,
+  Clock,
+  ArrowRight
 } from "lucide-react"
 import { useRouter, useParams } from "next/navigation"
 import { useFirestore, useDoc } from '@/firebase'
@@ -66,8 +68,7 @@ export default function LecturePlayerPage() {
     if (!lecture) return;
     setIsGenerating(true)
     try {
-      // For now we use a fallback transcript if real transcription isn't available
-      const transcript = lecture.transcript || "Today we explore the law of demand. As price increases, demand falls. This inverse relationship is key to market dynamics.";
+      const transcript = lecture.transcript || "Today we explore the law of demand. As price increases, demand falls. This inverse relationship is key to market dynamics. Let's look at an example: if the price of biryani increases, the demand might fall slightly, but for essential goods, it's different.";
       
       const [notes, subtitles] = await Promise.all([
         autoLectureNotesSummary({ lectureTranscript: transcript }),
@@ -81,14 +82,14 @@ export default function LecturePlayerPage() {
       setSubtitleData(subtitles)
       toast({
         title: "AI Materials Ready",
-        description: "Notes and bilingual subtitles generated.",
+        description: "Bilingual notes and summaries generated.",
       })
     } catch (error) {
       console.error("AI Generation failed:", error)
       toast({
         variant: "destructive",
         title: "Generation Failed",
-        description: "Please try again later.",
+        description: "Vani AI hit a snag. Please try again.",
       })
     } finally {
       setIsGenerating(false)
@@ -98,31 +99,39 @@ export default function LecturePlayerPage() {
   if (lectureLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-secondary text-white">
-        <Loader2 className="h-10 w-10 animate-spin" />
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
   }
 
   if (!lecture) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center bg-secondary text-white gap-4">
-        <p>Lecture not found.</p>
-        <Button onClick={() => router.back()}>Go Back</Button>
+      <div className="flex h-screen flex-col items-center justify-center bg-secondary text-white gap-6 p-10 text-center">
+        <div className="h-20 w-20 bg-white/10 rounded-full flex items-center justify-center text-primary">
+          <FileText className="h-10 w-10" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-headline font-bold">Lecture Not Found</h2>
+          <p className="text-white/60 text-sm leading-relaxed">This recording might have been removed or is still processing.</p>
+        </div>
+        <Button onClick={() => router.back()} className="rounded-xl w-full h-12 bg-primary">Go Back</Button>
       </div>
     );
   }
 
   const segments = [
-    { title: "Intro", start: "00:00", description: "Classroom Greeting & Context" },
-    { title: "Core Topic", start: "05:12", description: "Main lecture content" },
-    { title: "Summary", start: "15:45", description: "Quick Wrap-up" }
+    { title: "Introduction", start: "00:00", description: "Topic overview and objectives" },
+    { title: "Key Definitions", start: "04:20", description: "Defining Law of Demand" },
+    { title: "Classroom Example", start: "08:15", description: "Biryani price analogy" },
+    { title: "Graph Analysis", start: "12:45", description: "Visualizing the curve" },
+    { title: "Conclusion", start: "18:30", description: "Summary and next steps" }
   ]
 
   return (
     <div className="flex flex-col min-h-screen -mt-8 -mx-4 bg-secondary">
-      {/* Audio Player Area */}
-      <div className="relative aspect-video bg-black w-full flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://picsum.photos/seed/wani-lecture/800/450')] bg-cover opacity-50 blur-sm" />
+      {/* Smart Audio Player Area */}
+      <div className="relative aspect-[16/10] bg-black w-full flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://picsum.photos/seed/wani-lecture/800/500')] bg-cover opacity-40 blur-sm scale-110" />
         
         <audio 
           ref={audioRef} 
@@ -130,156 +139,224 @@ export default function LecturePlayerPage() {
           onEnded={() => setIsPlaying(false)}
         />
 
-        <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
-          <Button variant="ghost" size="icon" className="bg-white/10 text-white rounded-full backdrop-blur-md" onClick={() => router.back()}>
-            <ChevronLeft />
+        <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-10">
+          <Button variant="ghost" size="icon" className="bg-white/10 text-white rounded-2xl backdrop-blur-xl border border-white/20 h-11 w-11" onClick={() => router.back()}>
+            <ChevronLeft className="h-6 w-6" />
           </Button>
-          <div className="flex gap-2">
-            <Button variant="ghost" size="icon" className="bg-white/10 text-white rounded-full backdrop-blur-md" onClick={() => setIsOfflineSaved(!isOfflineSaved)}>
-              <Download className={isOfflineSaved ? "text-primary fill-primary" : ""} />
+          <div className="flex gap-3">
+            <Button variant="ghost" size="icon" className="bg-white/10 text-white rounded-2xl backdrop-blur-xl border border-white/20 h-11 w-11" onClick={() => setIsOfflineSaved(!isOfflineSaved)}>
+              <Download className={isOfflineSaved ? "text-primary fill-primary h-5 w-5" : "h-5 w-5"} />
             </Button>
-            <Button variant="ghost" size="icon" className="bg-white/10 text-white rounded-full backdrop-blur-md" onClick={() => setIsBookmarked(!isBookmarked)}>
-              {isBookmarked ? <BookmarkCheck className="text-primary fill-primary" /> : <Bookmark />}
+            <Button variant="ghost" size="icon" className="bg-white/10 text-white rounded-2xl backdrop-blur-xl border border-white/20 h-11 w-11" onClick={() => setIsBookmarked(!isBookmarked)}>
+              {isBookmarked ? <BookmarkCheck className="text-primary fill-primary h-5 w-5" /> : <Bookmark className="h-5 w-5" />}
             </Button>
           </div>
         </div>
 
         <button 
           onClick={() => setIsPlaying(!isPlaying)}
-          className="h-20 w-20 bg-primary rounded-full flex items-center justify-center shadow-2xl transition-transform active:scale-90 z-10"
+          className="h-24 w-24 bg-primary text-white rounded-full flex items-center justify-center shadow-[0_0_50px_rgba(255,107,0,0.4)] transition-all active:scale-90 z-10 hover:scale-105"
         >
-          {isPlaying ? <Pause className="h-8 w-8 fill-white text-white" /> : <Play className="h-8 w-8 fill-white text-white translate-x-0.5" />}
+          {isPlaying ? <Pause className="h-10 w-10 fill-current" /> : <Play className="h-10 w-10 fill-current translate-x-1" />}
         </button>
 
-        {/* Subtitles Overlay */}
-        <div className="absolute bottom-16 left-0 right-0 px-6 text-center z-10">
-          <div className="bg-black/70 backdrop-blur-md p-4 rounded-3xl inline-block max-w-[90%] border border-white/10">
+        {/* Bilingual Subtitles Overlay */}
+        <div className="absolute bottom-12 left-0 right-0 px-6 text-center z-10">
+          <div className="bg-black/80 backdrop-blur-2xl p-5 rounded-[2.5rem] inline-block max-w-[95%] border border-white/10 shadow-2xl">
             <p className="text-white font-medium text-sm leading-relaxed">
-              {subtitleData?.bilingualSegments[0]?.original || "Listening to the classroom recording..."}
+              {subtitleData?.bilingualSegments[activeSegment]?.original || "Replaying the classroom explanation..."}
             </p>
-            {bilingual && subtitleData?.bilingualSegments[0] && (
-              <p className="text-primary text-xs font-bold mt-2">
-                {subtitleData.bilingualSegments[0].translated}
+            {bilingual && subtitleData?.bilingualSegments[activeSegment] && (
+              <p className="text-primary text-xs font-bold mt-3 uppercase tracking-wide">
+                {subtitleData.bilingualSegments[activeSegment].translated}
               </p>
             )}
           </div>
         </div>
 
-        {/* Timeline */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 pt-0 z-10 bg-gradient-to-t from-black/80 to-transparent">
-          <div className="flex gap-1 h-1.5 mb-2">
+        {/* Timeline Progress Bar */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 pt-0 z-10 bg-gradient-to-t from-black to-transparent">
+          <div className="flex gap-1.5 h-1.5 mb-2 px-2">
             {segments.map((_, i) => (
               <div 
                 key={i} 
                 onClick={() => setActiveSegment(i)}
-                className={`flex-1 rounded-full cursor-pointer transition-colors ${i <= activeSegment ? 'bg-primary' : 'bg-white/20'}`} 
+                className={`flex-1 rounded-full cursor-pointer transition-all duration-300 ${i <= activeSegment ? 'bg-primary' : 'bg-white/20 hover:bg-white/40'}`} 
               />
             ))}
+          </div>
+          <div className="flex justify-between px-2 text-[10px] font-bold text-white/40 uppercase tracking-widest">
+            <span>{segments[activeSegment].start}</span>
+            <span>{segments[activeSegment].title}</span>
           </div>
         </div>
       </div>
 
-      {/* Content Area */}
-      <div className="flex-1 bg-background rounded-t-[3rem] mt-[-2.5rem] relative z-20 shadow-2xl border-t">
-        <div className="p-7 space-y-6">
+      {/* Classroom Content Recreation */}
+      <div className="flex-1 bg-background rounded-t-[3.5rem] mt-[-3rem] relative z-20 shadow-[0_-20px_50px_rgba(0,0,0,0.1)]">
+        <div className="p-8 space-y-8">
           <div className="flex justify-between items-start">
-            <div className="space-y-1">
-              <h1 className="text-2xl font-headline font-bold text-secondary">{lecture.title}</h1>
-              <p className="text-sm text-muted-foreground">{lecture.lecturerName} • {lecture.subject}</p>
+            <div className="space-y-1.5">
+              <Badge className="bg-primary/10 text-primary border-none text-[10px] uppercase font-bold px-3 py-1">{lecture.subject}</Badge>
+              <h1 className="text-2xl font-headline font-bold text-secondary leading-tight">{lecture.title}</h1>
+              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{lecture.lecturerName} • Classroom ID: {lectureId.slice(0, 6)}</p>
             </div>
-            <Button variant="ghost" size="icon" className="text-muted-foreground"><Share2 className="h-5 w-5" /></Button>
+            <Button variant="ghost" size="icon" className="text-muted-foreground bg-muted/30 rounded-full h-10 w-10"><Share2 className="h-5 w-5" /></Button>
           </div>
           
-          <div className="flex gap-2">
+          {/* Bilingual Toggle & AI Material Generation */}
+          <div className="grid grid-cols-2 gap-3">
               <Button 
-                size="sm" 
+                size="lg" 
                 variant={bilingual ? "default" : "outline"}
                 onClick={() => setBilingual(!bilingual)}
-                className="flex-1 rounded-2xl h-11 flex gap-2 font-bold"
+                className="rounded-2xl h-14 flex gap-2 font-bold shadow-lg shadow-primary/10"
               >
-                <Languages className="h-4 w-4" />
-                {bilingual ? "Mixed On" : "English Only"}
+                <Languages className="h-5 w-5" />
+                {bilingual ? "Bilingual On" : "English Only"}
               </Button>
               <Button 
-                size="sm" 
+                size="lg" 
                 variant="outline" 
                 onClick={handleGenerateAI}
                 disabled={isGenerating}
-                className="flex-1 rounded-2xl h-11 border-primary text-primary hover:bg-primary/5 font-bold gap-2"
+                className="rounded-2xl h-14 border-2 border-primary text-primary hover:bg-primary/5 font-bold gap-2"
               >
-                {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                AI Materials
+                {isGenerating ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
+                Gen AI Notes
               </Button>
           </div>
 
           <Tabs defaultValue="notes" className="w-full">
-            <TabsList className="w-full grid grid-cols-4 bg-muted/30 rounded-2xl p-1 h-12">
-              <TabsTrigger value="notes" className="rounded-xl text-xs">Notes</TabsTrigger>
-              <TabsTrigger value="key" className="rounded-xl text-xs">Core</TabsTrigger>
-              <TabsTrigger value="timeline" className="rounded-xl text-xs">Timeline</TabsTrigger>
-              <TabsTrigger value="exam" className="rounded-xl text-xs">Exam</TabsTrigger>
+            <TabsList className="w-full grid grid-cols-3 bg-muted/40 rounded-[1.5rem] p-1.5 h-14">
+              <TabsTrigger value="notes" className="rounded-xl text-xs font-bold data-[state=active]:shadow-lg">Lecture Notes</TabsTrigger>
+              <TabsTrigger value="timeline" className="rounded-xl text-xs font-bold data-[state=active]:shadow-lg">Timeline</TabsTrigger>
+              <TabsTrigger value="exam" className="rounded-xl text-xs font-bold data-[state=active]:shadow-lg">Exam Hub</TabsTrigger>
             </TabsList>
             
-            <ScrollArea className="h-[40vh] mt-6 pr-4">
-              <TabsContent value="notes" className="space-y-4 m-0">
-                <div className="bg-accent border border-primary/20 rounded-3xl p-5 flex items-start gap-3">
-                  <Smile className="h-5 w-5 text-primary shrink-0 mt-1" />
-                  <p className="text-sm font-medium text-secondary leading-relaxed">
-                    <span className="font-bold text-primary uppercase text-[10px] block mb-1">Classroom Context</span>
-                    AI is analyzing your lecture audio to recreate the classroom experience.
-                  </p>
+            <ScrollArea className="h-[45vh] mt-6 pr-2">
+              <TabsContent value="notes" className="space-y-6 m-0 animate-in fade-in duration-500">
+                <div className="bg-accent/50 border-2 border-primary/10 rounded-[2rem] p-6 flex items-start gap-4">
+                  <div className="h-10 w-10 bg-white rounded-2xl flex items-center justify-center text-primary shadow-sm shrink-0">
+                    <Smile className="h-6 w-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Classroom Insight</p>
+                    <p className="text-sm font-medium text-secondary leading-relaxed">
+                      "I've preserved Prof. Murali's teaching style. These notes focus on the examples he stressed in class."
+                    </p>
+                  </div>
                 </div>
+
                 {aiData ? (
-                  <div className="prose prose-sm text-secondary bg-white p-6 rounded-3xl border shadow-sm">
-                    <div dangerouslySetInnerHTML={{ __html: aiData.revisionNotes.replace(/\n/g, '<br/>') }} />
+                  <div className="space-y-6">
+                    <Card className="rounded-[2.5rem] border-none bg-white p-8 shadow-sm">
+                      <div className="flex items-center gap-2 mb-6 border-b pb-4">
+                        <FileText className="h-5 w-5 text-primary" />
+                        <h3 className="font-bold text-secondary uppercase text-xs tracking-widest">Revision Roadmap</h3>
+                      </div>
+                      <div className="prose prose-sm prose-secondary max-w-none text-secondary/80 leading-relaxed font-medium">
+                        <div dangerouslySetInnerHTML={{ __html: aiData.revisionNotes.replace(/\n/g, '<br/>') }} />
+                      </div>
+                    </Card>
+
+                    <div className="grid gap-3">
+                      <h4 className="font-bold text-secondary text-sm px-1 flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-primary" />
+                        Key Class Takeaways
+                      </h4>
+                      {aiData.keyPoints.map((point, i) => (
+                        <Card key={i} className="rounded-3xl border-2 border-muted/50 p-5 bg-white hover:border-primary/20 transition-all">
+                          <p className="text-sm font-medium text-secondary/80 leading-relaxed">
+                            <span className="text-primary font-bold mr-2">{i + 1}.</span>
+                            {point}
+                          </p>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
                 ) : (
-                  <div className="text-center py-10 opacity-40">
-                     <FileText className="h-10 w-10 mx-auto mb-2" />
-                     <p className="text-sm italic">Generate AI materials to see details.</p>
+                  <div className="flex flex-col items-center justify-center py-16 opacity-30 text-center space-y-4">
+                     <div className="h-20 w-20 rounded-full border-4 border-dashed border-secondary flex items-center justify-center">
+                        <Sparkles className="h-10 w-10" />
+                     </div>
+                     <div className="space-y-1">
+                        <p className="font-bold text-secondary">AI Brain Offline</p>
+                        <p className="text-xs">Tap 'Gen AI Notes' to recreate the classroom hub.</p>
+                     </div>
                   </div>
                 )}
               </TabsContent>
 
-              <TabsContent value="key" className="space-y-3">
-                 {aiData?.keyPoints?.map((point, i) => (
-                    <Card key={i} className="p-5 bg-white border-2 border-muted rounded-3xl">
-                       <h4 className="font-bold text-sm text-secondary mb-1">Key Takeaway {i+1}</h4>
-                       <p className="text-sm text-muted-foreground">{point}</p>
+              <TabsContent value="timeline" className="space-y-4 m-0 animate-in fade-in duration-500">
+                <h3 className="font-headline font-bold text-lg px-1">Smart Lecture Segments</h3>
+                <div className="space-y-3">
+                  {segments.map((s, i) => (
+                    <Card 
+                      key={i} 
+                      onClick={() => {
+                        setActiveSegment(i);
+                        if (audioRef.current) {
+                          // Simple jump logic simulation
+                          toast({ title: "Jumping to Segment", description: `Moving to ${s.title}` });
+                        }
+                      }}
+                      className={`rounded-[1.5rem] border-2 transition-all cursor-pointer p-5 flex justify-between items-center group ${activeSegment === i ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/20 bg-white'}`}
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className={`h-2 w-2 rounded-full ${activeSegment === i ? 'bg-primary' : 'bg-muted-foreground'}`} />
+                          <p className="font-bold text-sm text-secondary">{s.title}</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground ml-4">{s.description}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <Badge variant="outline" className="text-[10px] h-5 rounded-lg px-2 border-muted-foreground/30">{s.start}</Badge>
+                        <ArrowRight className={`h-4 w-4 text-primary transition-transform group-hover:translate-x-1 ${activeSegment === i ? 'opacity-100' : 'opacity-0'}`} />
+                      </div>
                     </Card>
-                 )) || (
-                    <p className="text-center py-10 text-muted-foreground text-sm">No core points generated yet.</p>
-                 )}
+                  ))}
+                </div>
               </TabsContent>
 
-              <TabsContent value="timeline" className="space-y-3">
-                {segments.map((s, i) => (
-                  <div 
-                    key={i} 
-                    onClick={() => setActiveSegment(i)}
-                    className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex justify-between items-center ${activeSegment === i ? 'border-primary bg-primary/5' : 'border-muted bg-white'}`}
-                  >
-                    <div>
-                      <p className="font-bold text-sm text-secondary">{s.title}</p>
-                      <p className="text-xs text-muted-foreground">{s.description}</p>
+              <TabsContent value="exam" className="space-y-6 m-0 animate-in fade-in duration-500">
+                <Card className="bg-secondary text-white rounded-[2.5rem] border-none p-8 shadow-2xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-40 h-40 bg-primary/20 rounded-full -mr-20 -mt-20 blur-3xl opacity-50" />
+                  <div className="relative z-10 space-y-6">
+                    <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+                      <div className="h-10 w-10 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg">
+                        <Sparkles className="h-6 w-6 fill-current" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-lg">Exam Predictor</h4>
+                        <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Unit 1 Analysis</p>
+                      </div>
                     </div>
-                    <Badge variant="outline" className="text-[10px]">{s.start}</Badge>
-                  </div>
-                ))}
-              </TabsContent>
-
-              <TabsContent value="exam">
-                <Card className="bg-secondary text-white p-7 rounded-[2.5rem] border-none shadow-xl relative overflow-hidden">
-                  <div className="relative z-10 space-y-4">
-                    <h4 className="font-bold text-lg flex items-center gap-2 text-primary">
-                      <Sparkles className="h-5 w-5 fill-current" />
-                      Exam Roadmap
-                    </h4>
-                    <p className="text-sm text-white/80 leading-relaxed italic">
-                      {aiData?.examSummary || "AI is ready to highlight what's important for your finals."}
-                    </p>
+                    
+                    <div className="space-y-4">
+                       <p className="text-sm text-white/80 leading-relaxed font-medium italic">
+                         {aiData?.examSummary || "Gen AI is analyzing your professor's voice patterns and syllabus to predict important questions."}
+                       </p>
+                       <div className="flex gap-3">
+                         <Button variant="outline" className="flex-1 rounded-2xl border-white/20 text-white hover:bg-white/10 font-bold text-xs h-12" onClick={() => router.push('/tests')}>
+                           Take Practice Quiz
+                         </Button>
+                         <Button className="flex-1 rounded-2xl bg-primary hover:bg-primary/90 font-bold text-xs h-12 shadow-xl shadow-primary/20">
+                           Revision Guide
+                         </Button>
+                       </div>
+                    </div>
                   </div>
                 </Card>
+
+                <div className="bg-accent/30 p-6 rounded-[2rem] border-2 border-dashed border-primary/20 space-y-4">
+                  <h4 className="font-bold text-secondary text-sm flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4 text-primary" />
+                    Student Discussions
+                  </h4>
+                  <p className="text-xs text-muted-foreground">Arjun, Sneha and 12 others are discussing "Biryani Analogy" right now.</p>
+                  <Button variant="link" className="text-primary font-bold p-0 text-xs h-auto" onClick={() => router.push('/chat')}>Join Chat Assistant</Button>
+                </div>
               </TabsContent>
             </ScrollArea>
           </Tabs>

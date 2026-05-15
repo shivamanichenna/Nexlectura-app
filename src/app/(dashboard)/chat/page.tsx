@@ -1,5 +1,4 @@
-
-"use client"
+'use client';
 
 import { useState, useRef, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
@@ -18,16 +17,17 @@ import {
   Mic, 
   Image as ImageIcon, 
   Sparkles, 
-  Search,
-  Book,
-  Lightbulb,
-  MoreVertical,
-  Loader2,
-  BookOpen
+  Lightbulb, 
+  MoreVertical, 
+  Loader2, 
+  BookOpen,
+  MessageSquare,
+  Info
 } from "lucide-react"
 import { aiDoubtAssistant } from "@/ai/flows/ai-doubt-assistant-flow"
-import { useFirestore, useCollection } from '@/firebase'
-import { collection, query, orderBy } from 'firebase/firestore'
+import { useFirestore, useCollection, useUser, useDoc } from '@/firebase'
+import { collection, query, orderBy, doc } from 'firebase/firestore'
+import { useToast } from "@/hooks/use-toast"
 
 type Message = {
   id: string
@@ -42,8 +42,13 @@ export default function AIDoubtAssistant() {
   const [isTyping, setIsTyping] = useState(false)
   const [selectedLectureId, setSelectedLectureId] = useState<string>("")
   const scrollRef = useRef<HTMLDivElement>(null)
-  
+  const { toast } = useToast()
+  const { user } = useUser()
   const db = useFirestore()
+
+  // Fetch student profile for learning style
+  const studentRef = useMemo(() => (db && user ? doc(db, 'students', user.uid) : null), [db, user]);
+  const { data: profile } = useDoc(studentRef);
 
   // Fetch lectures for context selection
   const lecturesQuery = useMemo(() => {
@@ -57,23 +62,25 @@ export default function AIDoubtAssistant() {
     return lectures?.find(l => l.id === selectedLectureId);
   }, [lectures, selectedLectureId]);
 
-  // Initialize first message
   useEffect(() => {
     setMessages([
       {
         id: '1',
-        text: "Hi Arjun! I'm Vani, your AI classroom companion. Select a lecture from the dropdown above and ask me anything about it. I can explain in English or Telugu!",
+        text: `Hi ${profile?.name?.split(' ')[0] || 'there'}! I'm Vani, your AI classroom companion. Select a lecture above and ask me anything about it. I speak Telglish, Hinglish, and English!`,
         sender: 'ai',
         timestamp: new Date()
       }
     ])
-  }, [])
+  }, [profile])
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+      const scrollContainer = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      }
     }
-  }, [messages])
+  }, [messages, isTyping])
 
   const handleSend = async () => {
     if (!input.trim()) return
@@ -90,7 +97,6 @@ export default function AIDoubtAssistant() {
     setIsTyping(true)
 
     try {
-      // Use actual lecture content if available, otherwise a helpful fallback
       const contextContent = selectedLecture?.transcript || selectedLecture?.title || "General classroom context.";
       
       const response = await aiDoubtAssistant({
@@ -98,7 +104,7 @@ export default function AIDoubtAssistant() {
         lectureContent: contextContent,
         userLearningStyle: 'mixed',
         preferredLanguage: 'English-Telugu mix',
-        chatHistory: messages.map(m => `${m.sender === 'user' ? 'User' : 'AI'}: ${m.text}`)
+        chatHistory: messages.slice(-5).map(m => `${m.sender === 'user' ? 'User' : 'AI'}: ${m.text}`)
       })
 
       const aiMsg: Message = {
@@ -108,97 +114,104 @@ export default function AIDoubtAssistant() {
         timestamp: new Date()
       }
       setMessages(prev => [...prev, aiMsg])
+
+      if (response.suggestedFollowUpQuestions?.length) {
+        // Option to display suggestions in UI later
+      }
     } catch (error) {
       console.error(error)
-      const errorMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        text: "I'm sorry, I hit a snag while processing that. Could you try asking again?",
-        sender: 'ai',
-        timestamp: new Date()
-      }
-      setMessages(prev => [...prev, errorMsg])
+      toast({
+        variant: "destructive",
+        title: "Connection Snag",
+        description: "Vani is having trouble connecting. Try again?"
+      })
     } finally {
       setIsTyping(false)
     }
   }
 
   return (
-    <div className="flex flex-col h-[85vh] -mt-4">
+    <div className="flex flex-col h-[85vh] -mt-6">
       {/* Header */}
-      <div className="flex flex-col border-b pb-4">
+      <div className="flex flex-col border-b pb-4 bg-background z-10 sticky top-0">
         <div className="flex items-center justify-between py-2">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <Avatar className="h-10 w-10 border-2 border-primary/20">
-                <AvatarImage src="https://picsum.photos/seed/wani-ai/100/100" />
+              <Avatar className="h-12 w-12 border-2 border-primary/20 shadow-lg">
+                <AvatarImage src="https://picsum.photos/seed/wani-ai/200/200" />
                 <AvatarFallback>V</AvatarFallback>
               </Avatar>
-              <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-background" />
+              <div className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-background" />
             </div>
             <div>
-              <h2 className="font-headline font-bold text-secondary text-sm">Vani AI Assistant</h2>
-              <p className="text-[10px] text-green-500 font-bold uppercase tracking-wider">Online & Thinking</p>
+              <h2 className="font-headline font-bold text-secondary text-sm">Vani AI Tutor</h2>
+              <div className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 bg-green-500 rounded-full animate-pulse" />
+                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Online & Ready</p>
+              </div>
             </div>
           </div>
-          <div className="flex gap-2">
-             <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground"><MoreVertical className="h-5 w-5" /></Button>
-          </div>
+          <Button variant="ghost" size="icon" className="rounded-full h-10 w-10"><MoreVertical className="h-5 w-5 text-muted-foreground" /></Button>
         </div>
 
         {/* Lecture Context Selector */}
-        <div className="px-1 mt-1">
+        <div className="mt-2 space-y-2">
+          <div className="flex items-center gap-2 px-1">
+            <BookOpen className="h-4 w-4 text-primary" />
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Select Lecture Context</span>
+          </div>
           <Select value={selectedLectureId} onValueChange={setSelectedLectureId}>
-            <SelectTrigger className="h-10 rounded-xl bg-muted/30 border-none text-xs font-bold">
-              <div className="flex items-center gap-2">
-                <BookOpen className="h-3.5 w-3.5 text-primary" />
-                <SelectValue placeholder="Select Lecture Context" />
-              </div>
+            <SelectTrigger className="h-12 rounded-2xl bg-muted/40 border-none shadow-none focus:ring-0 text-xs font-bold px-4">
+              <SelectValue placeholder="Which class are we discussing?" />
             </SelectTrigger>
-            <SelectContent className="rounded-xl border-muted">
+            <SelectContent className="rounded-2xl border-muted shadow-2xl">
               {lecturesLoading ? (
-                <div className="flex items-center justify-center p-4">
-                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                </div>
-              ) : lectures && lectures.length > 0 ? (
+                <div className="flex items-center justify-center p-6"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+              ) : lectures?.length ? (
                 lectures.map((lec: any) => (
-                  <SelectItem key={lec.id} value={lec.id} className="text-xs">
-                    {lec.title} ({lec.subject})
+                  <SelectItem key={lec.id} value={lec.id} className="text-xs py-3 rounded-xl focus:bg-primary/5">
+                    {lec.title} <span className="text-muted-foreground ml-1">({lec.subject})</span>
                   </SelectItem>
                 ))
               ) : (
-                <div className="p-4 text-center text-[10px] text-muted-foreground">No lectures available</div>
+                <div className="p-6 text-center text-xs text-muted-foreground">No lectures recorded yet.</div>
               )}
             </SelectContent>
           </Select>
-          {selectedLecture && (
-            <p className="text-[9px] text-muted-foreground mt-1.5 ml-1 font-medium">
-              Chatting about: <span className="text-primary font-bold">{selectedLecture.title}</span>
-            </p>
-          )}
         </div>
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 pr-4 py-4" ref={scrollRef}>
-        <div className="space-y-6">
+      <ScrollArea className="flex-1 py-4" ref={scrollRef}>
+        <div className="space-y-6 pb-4">
+          {!selectedLectureId && (
+            <div className="bg-accent/50 p-6 rounded-3xl border border-primary/10 flex items-start gap-4 mx-2">
+              <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-secondary">Start with Context</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">Select a lecture above so Vani can use your specific classroom notes to answer doubts.</p>
+              </div>
+            </div>
+          )}
+          
           {messages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2`}>
               <div className={`flex gap-3 max-w-[85%] ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
                 {msg.sender === 'ai' && (
-                  <Avatar className="h-8 w-8 shrink-0 mt-1">
+                  <Avatar className="h-9 w-9 shrink-0 mt-1 shadow-sm">
                     <AvatarImage src="https://picsum.photos/seed/wani-ai/100/100" />
                     <AvatarFallback>V</AvatarFallback>
                   </Avatar>
                 )}
-                <div className={`space-y-1`}>
-                   <div className={`p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
+                <div className="space-y-1.5">
+                   <div className={`p-4 rounded-3xl text-sm leading-relaxed shadow-sm ${
                      msg.sender === 'user' 
                      ? 'bg-primary text-white rounded-tr-none' 
-                     : 'bg-white border text-secondary rounded-tl-none'
+                     : 'bg-white border-2 border-muted/50 text-secondary rounded-tl-none'
                    }`}>
                     {msg.text}
                   </div>
-                  <p className={`text-[10px] text-muted-foreground ${msg.sender === 'user' ? 'text-right' : 'text-left'}`}>
+                  <p className={`text-[10px] font-bold text-muted-foreground/60 ${msg.sender === 'user' ? 'text-right mr-1' : 'text-left ml-1'}`}>
                     {msg.timestamp?.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
@@ -206,11 +219,11 @@ export default function AIDoubtAssistant() {
             </div>
           ))}
           {isTyping && (
-            <div className="flex justify-start items-center gap-2">
-               <Avatar className="h-8 w-8 shrink-0">
+            <div className="flex justify-start items-center gap-3 ml-1">
+               <Avatar className="h-9 w-9 shrink-0 shadow-sm">
                   <AvatarImage src="https://picsum.photos/seed/wani-ai/100/100" />
                 </Avatar>
-                <div className="flex gap-1">
+                <div className="bg-muted/30 p-4 rounded-3xl rounded-tl-none flex gap-1.5">
                   <span className="h-1.5 w-1.5 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]" />
                   <span className="h-1.5 w-1.5 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]" />
                   <span className="h-1.5 w-1.5 bg-primary rounded-full animate-bounce" />
@@ -220,50 +233,30 @@ export default function AIDoubtAssistant() {
         </div>
       </ScrollArea>
 
-      {/* Quick Suggestions */}
-      <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
-         {[
-           { label: "Explain Simply", icon: Sparkles },
-           { label: "Exam Answer", icon: Lightbulb },
-           { label: "Telugu Explain", icon: Book },
-         ].map((item, idx) => (
-           <Button 
-             key={idx} 
-             variant="outline" 
-             size="sm" 
-             onClick={() => setInput(prev => prev + (prev ? " " : "") + item.label)}
-             className="whitespace-nowrap rounded-full h-8 text-[11px] font-bold gap-1.5 border-muted"
-           >
-             <item.icon className="h-3 w-3 text-primary" />
-             {item.label}
-           </Button>
-         ))}
-      </div>
-
       {/* Input */}
-      <div className="py-4 border-t bg-background">
+      <div className="py-4 border-t bg-background mt-auto z-10">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="shrink-0 h-12 w-12 rounded-2xl bg-muted/50 text-muted-foreground">
-            <Mic className="h-5 w-5" />
+          <Button variant="ghost" size="icon" className="shrink-0 h-14 w-14 rounded-2xl bg-muted/30 text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all">
+            <Mic className="h-6 w-6" />
           </Button>
           <div className="flex-1 relative">
             <Input 
-              placeholder={selectedLectureId ? "Ask a doubt about this lecture..." : "Select a lecture first..."}
+              placeholder={selectedLectureId ? "Ask a doubt about this class..." : "Select context above..."}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              className="h-12 pr-12 rounded-2xl bg-muted/50 border-none focus-visible:ring-primary/20"
+              className="h-14 pr-12 rounded-2xl bg-muted/30 border-none focus-visible:ring-primary/20 text-sm font-medium"
             />
-            <button className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors">
+            <button className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors">
               <ImageIcon className="h-5 w-5" />
             </button>
           </div>
           <Button 
             onClick={handleSend}
-            disabled={!input.trim() || isTyping}
-            className="shrink-0 h-12 w-12 rounded-2xl shadow-lg shadow-primary/20"
+            disabled={!input.trim() || isTyping || !selectedLectureId}
+            className="shrink-0 h-14 w-14 rounded-2xl shadow-xl shadow-primary/30 transition-all active:scale-95"
           >
-            <Send className="h-5 w-5 fill-current" />
+            <Send className="h-6 w-6 fill-current" />
           </Button>
         </div>
       </div>
