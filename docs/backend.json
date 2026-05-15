@@ -1,0 +1,106 @@
+
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Core user document for authentication and role management",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "student",
+            "lecturer"
+          ]
+        }
+      },
+      "required": [
+        "uid",
+        "email",
+        "role"
+      ]
+    },
+    "LecturerProfile": {
+      "title": "Lecturer Profile",
+      "description": "Detailed profile for lecturer accounts",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "department": {
+          "type": "string"
+        },
+        "subjects": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "college": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "department",
+        "college"
+      ]
+    },
+    "StudentProfile": {
+      "title": "Student Profile",
+      "description": "Detailed profile for student accounts",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "department": {
+          "type": "string"
+        },
+        "semester": {
+          "type": "string"
+        },
+        "section": {
+          "type": "string"
+        },
+        "college": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "department",
+        "semester",
+        "section",
+        "college"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password"
+    ]
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "#/entities/User",
+      "description": "User role and authentication metadata"
+    },
+    "/lecturers/{uid}": {
+      "schema": "#/entities/LecturerProfile",
+      "description": "Lecturer-specific profile details"
+    },
+    "/students/{uid}": {
+      "schema": "#/entities/StudentProfile",
+      "description": "Student-specific profile details"
+    }
+  }
+}

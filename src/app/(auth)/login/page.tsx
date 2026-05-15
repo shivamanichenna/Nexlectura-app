@@ -1,18 +1,28 @@
 
-"use client"
+'use client';
 
 import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Sparkles, Mail, Lock, Fingerprint, GraduationCap, User } from "lucide-react"
+import { Sparkles, Mail, Lock, Fingerprint, GraduationCap, User, Loader2 } from "lucide-react"
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { useAuth, useFirestore } from '@/firebase';
+import { useToast } from "@/hooks/use-toast"
 
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { toast } = useToast()
+  const auth = useAuth()
+  const db = useFirestore()
+
   const [isLoading, setIsLoading] = useState(false)
   const [role, setRole] = useState<'student' | 'lecturer'>('student')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
 
   useEffect(() => {
     const roleParam = searchParams.get('role')
@@ -21,22 +31,50 @@ function LoginForm() {
     }
   }, [searchParams])
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!auth || !db) return
+
     setIsLoading(true)
     
-    // Persist role for navigation persistence
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('vani-role', role)
-    }
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-    setTimeout(() => {
-      if (role === 'lecturer') {
-        router.push('/lecturer')
+      // Fetch user role from Firestore
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const userRole = userData.role;
+
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('vani-role', userRole);
+        }
+
+        toast({
+          title: "Welcome back!",
+          description: "Login successful.",
+        });
+
+        if (userRole === 'lecturer') {
+          router.push('/lecturer');
+        } else {
+          router.push('/home');
+        }
       } else {
-        router.push('/home')
+        throw new Error("User record not found. Please sign up.");
       }
-    }, 1000)
+    } catch (error: any) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: error.message || "Invalid email or password.",
+      });
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -56,12 +94,14 @@ function LoginForm() {
 
         <div className="flex bg-muted/50 p-1 rounded-xl mb-8">
           <button 
+            type="button"
             onClick={() => setRole('student')}
             className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold rounded-lg transition-all ${role === 'student' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
           >
             <User className="h-4 w-4" /> Student
           </button>
           <button 
+            type="button"
             onClick={() => setRole('lecturer')}
             className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold rounded-lg transition-all ${role === 'lecturer' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
           >
@@ -72,12 +112,18 @@ function LoginForm() {
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="id" className="text-sm font-semibold ml-1">
-                {role === 'lecturer' ? "Employee ID or Email" : "Student ID or Email"}
-              </Label>
+              <Label htmlFor="email" className="text-sm font-semibold ml-1">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input id="id" placeholder={role === 'lecturer' ? "Ex: PROF2024001" : "Ex: VU2024001"} className="h-14 pl-12 rounded-2xl bg-white border-2 focus:border-primary transition-all text-lg" />
+                <Input 
+                  id="email" 
+                  type="email" 
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@college.edu" 
+                  className="h-14 pl-12 rounded-2xl bg-white border-2 focus:border-primary transition-all text-lg" 
+                />
               </div>
             </div>
             <div className="space-y-2">
@@ -87,13 +133,28 @@ function LoginForm() {
               </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input id="pass" type="password" placeholder="••••••••" className="h-14 pl-12 rounded-2xl bg-white border-2 focus:border-primary transition-all text-lg" />
+                <Input 
+                  id="pass" 
+                  type="password" 
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••" 
+                  className="h-14 pl-12 rounded-2xl bg-white border-2 focus:border-primary transition-all text-lg" 
+                />
               </div>
             </div>
           </div>
 
           <Button type="submit" size="lg" disabled={isLoading} className="w-full h-14 rounded-2xl text-lg font-semibold shadow-xl shadow-primary/20">
-            {isLoading ? "Signing in..." : `Login to Vani as ${role === 'lecturer' ? 'Lecturer' : 'Student'}`}
+            {isLoading ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                Signing in...
+              </>
+            ) : (
+              `Login as ${role === 'lecturer' ? 'Lecturer' : 'Student'}`
+            )}
           </Button>
         </form>
 
