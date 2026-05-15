@@ -3,14 +3,14 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Upload, Users, BarChart3, UserCircle } from "lucide-react"
+import { LayoutDashboard, Upload, Users, GraduationCap, BarChart3, UserCircle, CheckCircle2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
   { name: "Dash", icon: LayoutDashboard, path: "/lecturer" },
+  { name: "Classes", icon: GraduationCap, path: "/lecturer/classes" },
   { name: "Upload", icon: Upload, path: "/lecturer/upload" },
-  { name: "Students", icon: Users, path: "/lecturer/students" },
-  { name: "Insights", icon: BarChart3, path: "/lecturer/insights" },
+  { name: "Stats", icon: BarChart3, path: "/lecturer/insights" },
   { name: "Profile", icon: UserCircle, path: "/profile" },
 ]
 
@@ -31,8 +31,8 @@ export function LecturerNav() {
                 isActive ? "text-primary scale-110" : "text-white/60 hover:text-white"
               )}
             >
-              <item.icon className={cn("h-6 w-6", isActive && "stroke-[2.5px]")} />
-              <span className="text-[10px] font-bold tracking-wide uppercase">{item.name}</span>
+              <item.icon className={cn("h-5 w-5", isActive && "stroke-[2.5px] text-primary")} />
+              <span className="text-[9px] font-bold tracking-wide uppercase">{item.name}</span>
             </Link>
           )
         })}

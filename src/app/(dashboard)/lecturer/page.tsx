@@ -2,7 +2,7 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { 
@@ -12,12 +12,16 @@ import {
   TrendingUp, 
   Plus, 
   Play, 
-  ChevronRight,
-  Eye,
+  Clock,
+  Calendar,
+  CheckCircle2,
+  BookOpen,
+  ArrowRight,
   Settings,
-  MoreVertical
+  Sparkles
 } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 
 export default function LecturerDashboard() {
   const [activeTab, setActiveTab] = useState('overview')
@@ -35,130 +39,139 @@ export default function LecturerDashboard() {
         </Button>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="rounded-3xl border-none bg-primary/10 text-primary">
-          <CardContent className="p-4 space-y-2">
-            <Users className="h-6 w-6" />
-            <div>
-              <p className="text-2xl font-bold">842</p>
-              <p className="text-[10px] font-bold uppercase">Active Students</p>
-            </div>
-          </CardContent>
+      {/* Quick Stats Banner */}
+      <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+        <Card className="min-w-[140px] rounded-2xl border-none bg-primary/10 text-primary p-4 space-y-2">
+          <Users className="h-5 w-5" />
+          <div>
+            <p className="text-xl font-bold">842</p>
+            <p className="text-[9px] font-bold uppercase">Students</p>
+          </div>
         </Card>
-        <Card className="rounded-3xl border-none bg-blue-500/10 text-blue-600">
-          <CardContent className="p-4 space-y-2">
-            <MessageCircle className="h-6 w-6" />
-            <div>
-              <p className="text-2xl font-bold">14</p>
-              <p className="text-[10px] font-bold uppercase">Unresolved Doubts</p>
-            </div>
-          </CardContent>
+        <Card className="min-w-[140px] rounded-2xl border-none bg-blue-500/10 text-blue-600 p-4 space-y-2">
+          <MessageCircle className="h-5 w-5" />
+          <div>
+            <p className="text-xl font-bold">14</p>
+            <p className="text-[9px] font-bold uppercase">Open Doubts</p>
+          </div>
+        </Card>
+        <Card className="min-w-[140px] rounded-2xl border-none bg-emerald-500/10 text-emerald-600 p-4 space-y-2">
+          <TrendingUp className="h-5 w-5" />
+          <div>
+            <p className="text-xl font-bold">92%</p>
+            <p className="text-[9px] font-bold uppercase">Attendance</p>
+          </div>
         </Card>
       </div>
 
-      {/* Primary Action: Upload */}
-      <Card className="rounded-[2rem] bg-secondary text-white border-none overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full -mr-16 -mt-16 blur-2xl" />
-        <CardContent className="p-6 relative z-10 flex flex-col gap-4">
-          <div className="flex items-center gap-2">
-            <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center">
-              <Plus className="h-6 w-6 text-white" />
+      {/* Main Actions Grid */}
+      <div className="grid grid-cols-2 gap-4">
+        <Link href="/lecturer/upload" className="block">
+          <Card className="h-full rounded-3xl bg-secondary text-white border-none p-5 flex flex-col justify-between hover:scale-[1.02] transition-transform cursor-pointer">
+            <div className="h-10 w-10 bg-primary rounded-xl flex items-center justify-center mb-4">
+              <Upload className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-lg">New Lecture</h3>
-              <p className="text-white/60 text-xs">Upload transcript or video</p>
+              <h3 className="font-bold text-sm">Upload Lecture</h3>
+              <p className="text-white/50 text-[10px]">AI auto-processing</p>
             </div>
-          </div>
-          <Button className="w-full bg-white text-secondary hover:bg-white/90 font-bold h-12 rounded-xl">
-            <Upload className="h-4 w-4 mr-2" />
-            Start Uploading
-          </Button>
-        </CardContent>
-      </Card>
+          </Card>
+        </Link>
+        <Link href="/lecturer/assignments" className="block">
+          <Card className="h-full rounded-3xl border-2 border-muted bg-white p-5 flex flex-col justify-between hover:scale-[1.02] transition-transform cursor-pointer">
+            <div className="h-10 w-10 bg-orange-500/10 rounded-xl flex items-center justify-center mb-4">
+              <CheckCircle2 className="h-5 w-5 text-orange-500" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-secondary">Assignments</h3>
+              <p className="text-muted-foreground text-[10px]">Create & Review</p>
+            </div>
+          </Card>
+        </Link>
+      </div>
 
-      {/* Class Performance */}
+      {/* Today's Schedule */}
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <h3 className="font-headline font-bold text-lg flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-green-500" />
-            Class Performance
+            <Calendar className="h-5 w-5 text-primary" />
+            Today's Schedule
           </h3>
-          <Button variant="link" size="sm" className="text-primary font-bold">See Analytics</Button>
+          <Badge variant="outline" className="rounded-lg text-primary border-primary">Live</Badge>
         </div>
-        <Card className="rounded-3xl border-2 border-muted">
-          <CardContent className="p-5">
-            <div className="flex items-end justify-between h-24 gap-2">
-              {[40, 60, 45, 90, 75, 85, 65].map((h, i) => (
-                <div key={i} className="flex-1 bg-muted rounded-t-lg relative group">
-                  <div 
-                    className={`absolute bottom-0 left-0 right-0 rounded-t-lg transition-all duration-500 ${i === 3 ? 'bg-primary' : 'bg-primary/40'}`} 
-                    style={{ height: `${h}%` }} 
-                  />
-                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-[10px] font-bold bg-secondary text-white px-1.5 py-0.5 rounded">{h}%</span>
-                  </div>
+        <Card className="rounded-3xl border-2 border-muted overflow-hidden">
+          <CardContent className="p-0">
+            {[
+              { time: "10:00 AM", title: "Macroeconomics (Sec A)", room: "Room 402", status: "Completed" },
+              { time: "11:30 AM", title: "Indian Banking System", room: "Lecture Hall 1", status: "Ongoing" },
+              { time: "02:00 PM", title: "Seminar: Fiscal Policy", room: "Virtual", status: "Upcoming" },
+            ].map((session, idx) => (
+              <div key={idx} className={`p-4 flex items-center gap-4 ${idx !== 2 ? 'border-b border-muted' : ''} ${session.status === 'Ongoing' ? 'bg-primary/5' : ''}`}>
+                <div className="text-center min-w-[70px]">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase">{session.time.split(' ')[1]}</p>
+                  <p className="text-sm font-bold text-secondary">{session.time.split(' ')[0]}</p>
                 </div>
-              ))}
-            </div>
-            <div className="flex justify-between mt-3 text-[10px] font-bold text-muted-foreground uppercase">
-              <span>Mon</span>
-              <span>Wed</span>
-              <span>Fri</span>
-              <span>Sun</span>
-            </div>
+                <div className="flex-1">
+                  <h4 className="font-bold text-sm text-secondary">{session.title}</h4>
+                  <p className="text-xs text-muted-foreground">{session.room}</p>
+                </div>
+                <div className={`text-[10px] font-bold uppercase ${session.status === 'Completed' ? 'text-green-500' : session.status === 'Ongoing' ? 'text-primary' : 'text-muted-foreground'}`}>
+                  {session.status}
+                </div>
+              </div>
+            ))}
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Lectures Uploaded */}
-      <div className="space-y-4">
-        <h3 className="font-headline font-bold text-lg">Recent Lectures</h3>
+      {/* AI Classroom Insights Summary */}
+      <Card className="rounded-3xl bg-accent/50 border border-accent p-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 bg-white rounded-lg flex items-center justify-center text-primary shadow-sm">
+            <Sparkles className="h-4 w-4" />
+          </div>
+          <h3 className="font-bold text-secondary">AI Classroom Insights</h3>
+        </div>
         <div className="space-y-3">
-          {[
-            { id: "1", title: "Banking and Credit Control", subject: "Economics", views: 420, doubts: 5 },
-            { id: "2", title: "National Income Accounting", subject: "Economics", views: 385, doubts: 2 },
-          ].map((lec) => (
-            <Card key={lec.id} className="rounded-2xl border-none bg-white shadow-sm border-2 border-muted hover:border-primary/20 transition-all cursor-pointer">
-              <CardContent className="p-4 flex gap-4">
-                <div className="relative w-20 h-20 rounded-xl overflow-hidden shrink-0">
-                  <Image src={`https://picsum.photos/seed/prof-${lec.id}/200/200`} alt="thumb" fill className="object-cover" />
-                </div>
-                <div className="flex-1 flex flex-col justify-between py-0.5">
-                  <div className="space-y-0.5">
-                    <h4 className="font-bold text-secondary text-sm leading-tight">{lec.title}</h4>
-                    <p className="text-[10px] text-muted-foreground font-medium">{lec.subject}</p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-bold">
-                      <Eye className="h-3 w-3" /> {lec.views}
-                    </div>
-                    <div className="flex items-center gap-1 text-[10px] text-primary font-bold">
-                      <MessageCircle className="h-3 w-3" /> {lec.doubts} Doubts
-                    </div>
-                  </div>
-                </div>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+          <div className="flex gap-3">
+             <div className="h-2 w-2 rounded-full bg-destructive mt-1.5 shrink-0" />
+             <p className="text-xs text-muted-foreground leading-relaxed">
+               <span className="font-bold text-secondary">Confusion Spike:</span> 12 students struggled with "Money Multiplier" in yesterday's lecture.
+             </p>
+          </div>
+          <div className="flex gap-3">
+             <div className="h-2 w-2 rounded-full bg-primary mt-1.5 shrink-0" />
+             <p className="text-xs text-muted-foreground leading-relaxed">
+               <span className="font-bold text-secondary">Improvement:</span> Top 10% students increased their quiz scores by 15% after using AI Flashcards.
+             </p>
+          </div>
         </div>
-      </div>
+        <Button variant="outline" className="w-full h-10 rounded-xl text-xs font-bold border-primary text-primary hover:bg-primary/5">
+          View Detailed Analytics
+          <ArrowRight className="h-3 w-3 ml-2" />
+        </Button>
+      </Card>
 
-      {/* Student Shoutouts/Alerts */}
-      <div className="bg-accent/50 p-5 rounded-3xl border border-accent flex gap-4">
-        <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center text-primary shadow-sm shrink-0">
-          <MessageCircle className="h-5 w-5" />
-        </div>
-        <div>
-          <h4 className="font-bold text-secondary text-sm">Critical Doubt Alert</h4>
-          <p className="text-xs text-muted-foreground mt-1">
-            5 students are confused about <span className="text-primary font-bold">"CRR vs SLR"</span> in Chapter 4. 
-            <button className="text-primary font-bold ml-1 hover:underline">Reply with Video Hint?</button>
-          </p>
-        </div>
+      {/* Syllabus Knowledge Base */}
+      <div className="space-y-4">
+        <h3 className="font-headline font-bold text-lg flex items-center gap-2">
+          <BookOpen className="h-5 w-5 text-secondary" />
+          Syllabus & Knowledge Base
+        </h3>
+        <Link href="/lecturer/library">
+          <Card className="rounded-3xl border-2 border-muted hover:border-primary/20 transition-all cursor-pointer">
+            <CardContent className="p-5 flex items-center gap-4">
+              <div className="h-12 w-12 bg-muted/50 rounded-2xl flex items-center justify-center">
+                 <BookOpen className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-bold text-sm text-secondary">Course Knowledge Base</h4>
+                <p className="text-xs text-muted-foreground">3 PDFs, 1 Syllabus Uploaded</p>
+              </div>
+              <Plus className="h-5 w-5 text-primary" />
+            </CardContent>
+          </Card>
+        </Link>
       </div>
     </div>
   )
