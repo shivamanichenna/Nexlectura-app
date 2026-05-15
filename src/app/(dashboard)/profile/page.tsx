@@ -54,7 +54,8 @@ export default function ProfilePage() {
         title: "Signed out successfully",
         description: "Come back soon to continue your journey!",
       })
-      router.push("/")
+      // Redirect to login page so user can choose a different login role
+      router.push("/login")
     } catch (error: any) {
       toast({
         variant: "destructive",
