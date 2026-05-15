@@ -6,11 +6,12 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Sparkles, Mail, Lock, Fingerprint, GraduationCap, User, Loader2 } from "lucide-react"
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { Sparkles, Mail, Lock, Fingerprint, GraduationCap, User, Loader2, AlertCircle } from "lucide-react"
+import { signInWithEmailAndPassword, AuthError } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase';
 import { useToast } from "@/hooks/use-toast"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 function LoginForm() {
   const router = useRouter()
@@ -23,6 +24,7 @@ function LoginForm() {
   const [role, setRole] = useState<'student' | 'lecturer'>('student')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [configError, setConfigError] = useState<string | null>(null)
 
   useEffect(() => {
     const roleParam = searchParams.get('role')
@@ -36,6 +38,7 @@ function LoginForm() {
     if (!auth || !db) return
 
     setIsLoading(true)
+    setConfigError(null)
     
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -66,12 +69,18 @@ function LoginForm() {
         throw new Error("User record not found. Please sign up.");
       }
     } catch (error: any) {
-      console.error(error);
-      toast({
-        variant: "destructive",
-        title: "Login failed",
-        description: error.message || "Invalid email or password.",
-      });
+      const authError = error as AuthError;
+      console.error("Login Error:", authError.code, authError.message);
+      
+      if (authError.code === 'auth/configuration-not-found') {
+        setConfigError("Authentication is not yet configured. Please enable 'Email/Password' in your Firebase Console (Authentication > Sign-in method).");
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Login failed",
+          description: authError.message || "Invalid email or password.",
+        });
+      }
     } finally {
       setIsLoading(false)
     }
@@ -91,6 +100,16 @@ function LoginForm() {
             {role === 'lecturer' ? "Manage your AI classroom and students." : "Your AI classroom is waiting for you."}
           </p>
         </div>
+
+        {configError && (
+          <Alert variant="destructive" className="mb-6 rounded-2xl border-2">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Configuration Required</AlertTitle>
+            <AlertDescription className="text-xs">
+              {configError}
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="flex bg-muted/50 p-1 rounded-xl mb-8">
           <button 
@@ -195,7 +214,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
       <LoginForm />
     </Suspense>
   )
