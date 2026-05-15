@@ -11,13 +11,14 @@ import {
   Flame, 
   Clock, 
   Play, 
-  TrendingDown, 
   BookOpen, 
   MessageSquare,
   Calendar,
   ChevronRight,
   Lightbulb,
-  ArrowUpRight
+  ArrowUpRight,
+  TrendingUp,
+  Brain
 } from "lucide-react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
@@ -37,42 +38,42 @@ export default function StudentDashboard() {
 
   return (
     <div className="space-y-6 pb-20">
-      {/* Header */}
+      {/* Dynamic Header */}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-muted-foreground font-medium text-sm">{greeting}, Arjun 👋</h2>
-          <h1 className="text-2xl font-headline font-bold text-secondary">Your AI Learning Path</h1>
+          <h1 className="text-2xl font-headline font-bold text-secondary">Vani Learning Path</h1>
         </div>
-        <Link href="/profile" className="flex items-center gap-1.5 bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20">
-          <Flame className="h-5 w-5 text-primary fill-primary" />
+        <Link href="/profile" className="flex items-center gap-1.5 bg-primary/10 px-3 py-1.5 rounded-full border border-primary/20 group">
+          <Flame className="h-5 w-5 text-primary fill-primary animate-pulse" />
           <span className="font-bold text-primary">12</span>
         </Link>
       </div>
 
-      {/* Daily Lecture Feed / Active Lesson */}
-      <Card className="bg-secondary text-white border-none rounded-[2.5rem] overflow-hidden relative shadow-2xl shadow-secondary/20">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full -mr-16 -mt-16 blur-2xl" />
+      {/* Daily Lecture Feed - Feature 3 */}
+      <Card className="bg-secondary text-white border-none rounded-[2.5rem] overflow-hidden relative shadow-2xl shadow-secondary/20 group cursor-pointer">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full -mr-16 -mt-16 blur-2xl transition-all group-hover:scale-125" />
         <CardContent className="p-7 relative z-10 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-widest">
               <Zap className="h-4 w-4" />
-              Live Now
+              Today's Feed
             </div>
-            <Badge variant="outline" className="border-white/20 text-white text-[10px]">Today's Feed</Badge>
+            <Badge variant="outline" className="border-white/20 text-white text-[10px]">Live Class</Badge>
           </div>
           <div>
-            <h3 className="text-2xl font-headline font-bold">Introduction to Macroeconomics</h3>
-            <p className="text-white/60 text-sm mt-1">Prof. S. Murali Krishna • Chapter 4: Banking</p>
+            <h3 className="text-2xl font-headline font-bold">Intro to Macroeconomics</h3>
+            <p className="text-white/60 text-sm mt-1">Prof. Murali • Chapter 4: Banking</p>
           </div>
           <div className="space-y-2">
             <div className="flex justify-between text-[11px] font-medium">
               <span className="text-white/80">32 mins left • Next: "Money Multiplier"</span>
-              <span className="text-white/80">45% Complete</span>
+              <span className="text-white/80">45%</span>
             </div>
             <Progress value={45} className="h-2.5 bg-white/10" />
           </div>
           <Link href="/study/1">
-            <Button className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-14 rounded-2xl shadow-lg shadow-primary/20 mt-2">
+            <Button className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-14 rounded-2xl shadow-lg mt-2">
               <Play className="h-5 w-5 mr-2 fill-current" />
               Resume Classroom Session
             </Button>
@@ -85,8 +86,8 @@ export default function StudentDashboard() {
         {[
           { icon: MessageSquare, label: "AI Tutor", color: "bg-blue-500", path: "/chat" },
           { icon: Sparkles, label: "Revision", color: "bg-orange-500", path: "/revision" },
-          { icon: BookOpen, label: "Study Hub", color: "bg-purple-500", path: "/study" },
-          { icon: Clock, label: "History", color: "bg-emerald-500", path: "/profile" },
+          { icon: BookOpen, label: "Library", color: "bg-purple-500", path: "/study" },
+          { icon: Brain, label: "Tests", color: "bg-emerald-500", path: "/tests" },
         ].map((item, idx) => (
           <Link href={item.path} key={idx} className="flex flex-col items-center gap-2 group">
             <div className={`h-14 w-14 rounded-2xl ${item.color} flex items-center justify-center text-white shadow-xl transition-all group-hover:scale-110 group-hover:-rotate-3`}>
@@ -97,74 +98,44 @@ export default function StudentDashboard() {
         ))}
       </div>
 
-      {/* AI Recommendations Section */}
+      {/* AI Recommendations - Feature 13 */}
       <div className="space-y-4">
         <h3 className="font-headline font-bold text-lg flex items-center gap-2">
           <Lightbulb className="h-5 w-5 text-primary" />
           AI Study Suggestions
         </h3>
         <div className="grid grid-cols-1 gap-3">
-          <Card className="rounded-3xl border-none bg-accent/50 p-5 flex items-center gap-4 hover:bg-accent transition-colors cursor-pointer group">
-            <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center text-primary shadow-sm group-hover:scale-105 transition-transform">
-              <Sparkles className="h-6 w-6" />
-            </div>
-            <div className="flex-1">
-              <p className="font-bold text-sm text-secondary">Review "CRR vs SLR" Flashcards</p>
-              <p className="text-xs text-muted-foreground">You struggled with this in the last quiz.</p>
-            </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-          </Card>
+          <Link href="/revision">
+            <Card className="rounded-3xl border-none bg-accent/50 p-5 flex items-center gap-4 hover:bg-accent transition-colors group">
+              <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center text-primary shadow-sm group-hover:scale-105 transition-transform">
+                <Sparkles className="h-6 w-6" />
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-sm text-secondary">Review "CRR vs SLR" Flashcards</p>
+                <p className="text-xs text-muted-foreground">You struggled with this in Unit 3.</p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </Card>
+          </Link>
           
-          <Card className="rounded-3xl border-none bg-blue-50/50 p-5 flex items-center gap-4 hover:bg-blue-50 transition-colors cursor-pointer group">
-            <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center text-blue-500 shadow-sm group-hover:scale-105 transition-transform">
-              <BookOpen className="h-6 w-6" />
-            </div>
-            <div className="flex-1">
-              <p className="font-bold text-sm text-secondary">New Summary: Unit 4 Statistics</p>
-              <p className="text-xs text-muted-foreground">Prof. Rao uploaded 2 hours ago.</p>
-            </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-          </Card>
+          <Link href="/study">
+            <Card className="rounded-3xl border-none bg-blue-50/50 p-5 flex items-center gap-4 hover:bg-blue-50 transition-colors group">
+              <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center text-blue-500 shadow-sm group-hover:scale-105 transition-transform">
+                <BookOpen className="h-6 w-6" />
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-sm text-secondary">New Summary: Unit 4 Statistics</p>
+                <p className="text-xs text-muted-foreground">Uploaded by Prof. Rao 2h ago.</p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </Card>
+          </Link>
         </div>
       </div>
 
-      {/* Today's Schedule Feed */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h3 className="font-headline font-bold text-lg flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-secondary" />
-            Today's Feed
-          </h3>
-          <Button variant="link" className="text-xs font-bold text-primary p-0">View All</Button>
-        </div>
-        <div className="space-y-3">
-          {[
-            { time: "10:00 AM", title: "Microprocessors", type: "Lecture Uploaded", icon: Play, color: "text-blue-500", bg: "bg-blue-50" },
-            { time: "01:30 PM", title: "Assignment: Unit 3", type: "Deadline Tomorrow", icon: Clock, color: "text-orange-500", bg: "bg-orange-50" },
-          ].map((item, idx) => (
-            <div key={idx} className="flex gap-4 items-start">
-               <div className="text-right min-w-[60px] pt-1">
-                 <p className="text-xs font-bold text-secondary">{item.time}</p>
-                 <p className="text-[10px] text-muted-foreground font-bold uppercase">Today</p>
-               </div>
-               <div className="flex-1 bg-white border-2 border-muted rounded-2xl p-4 flex items-center gap-4">
-                 <div className={`h-10 w-10 rounded-xl ${item.bg} ${item.color} flex items-center justify-center`}>
-                    <item.icon className="h-5 w-5" />
-                 </div>
-                 <div className="flex-1">
-                    <p className="text-sm font-bold text-secondary leading-tight">{item.title}</p>
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase mt-0.5">{item.type}</p>
-                 </div>
-                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
-               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Progress & Mastery */}
-      <Card className="rounded-[2rem] border-none bg-secondary text-white shadow-xl">
-        <CardContent className="p-6 flex items-center gap-6">
+      {/* Gamification/Progress - Feature 14/15 */}
+      <Card className="rounded-[2.5rem] border-none bg-secondary text-white shadow-xl p-6">
+        <div className="flex items-center gap-6">
           <div className="relative h-20 w-20 flex items-center justify-center">
              <svg className="h-20 w-20 transform -rotate-90">
                 <circle cx="40" cy="40" r="36" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-white/10" />
@@ -175,11 +146,11 @@ export default function StudentDashboard() {
           <div className="flex-1">
             <h4 className="font-bold text-lg flex items-center gap-1.5">
               Growth Mastery
-              <ArrowUpRight className="h-4 w-4 text-emerald-400" />
+              <TrendingUp className="h-4 w-4 text-emerald-400" />
             </h4>
-            <p className="text-sm text-white/60">You're in the top 15% of your class this week!</p>
+            <p className="text-sm text-white/60">You're in the top 15% of your section this week!</p>
           </div>
-        </CardContent>
+        </div>
       </Card>
     </div>
   )
