@@ -16,7 +16,8 @@ import {
   Lock,
   Building,
   BookOpen,
-  Hash
+  Hash,
+  IdCard
 } from 'lucide-react';
 import { createUserWithEmailAndPassword, AuthError } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
@@ -37,6 +38,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [college, setCollege] = useState('');
+  const [collegeId, setCollegeId] = useState('');
   const [department, setDepartment] = useState('');
   const [semester, setSemester] = useState('');
   const [section, setSection] = useState('');
@@ -51,7 +53,6 @@ export default function SignupPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // 1. Create Core User Document
       const userData = {
         uid: user.uid,
         email: email,
@@ -69,7 +70,6 @@ export default function SignupPage() {
           errorEmitter.emit('permission-error', permissionError);
         });
 
-      // 2. Create Role-Specific Profile Document
       if (role === 'lecturer') {
         const profileData = {
           name,
@@ -95,6 +95,7 @@ export default function SignupPage() {
           semester,
           section,
           college,
+          collegeId,
           studentId: user.uid
         };
         const studentRef = doc(db, 'students', user.uid);
@@ -118,7 +119,6 @@ export default function SignupPage() {
         localStorage.setItem('vani-role', role);
       }
 
-      // Small delay to allow optimistic Firestore updates to propagate locally
       setTimeout(() => {
         router.push(role === 'lecturer' ? '/lecturer' : '/home');
       }, 500);
@@ -143,141 +143,157 @@ export default function SignupPage() {
             <Sparkles className="h-8 w-8" />
           </div>
           <h1 className="text-3xl font-headline font-bold text-secondary">Join Vani AI</h1>
-          <p className="text-muted-foreground mt-2">Start your AI-powered learning journey.</p>
+          <p className="text-muted-foreground mt-2 text-sm">Your AI-powered classroom companion.</p>
         </div>
 
-        <div className="flex bg-muted/50 p-1 rounded-xl mb-8">
+        <div className="flex bg-muted/50 p-1 rounded-xl mb-6">
           <button 
             type="button"
             onClick={() => setRole('student')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold rounded-lg transition-all ${role === 'student' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all ${role === 'student' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
           >
             <User className="h-4 w-4" /> Student
           </button>
           <button 
             type="button"
             onClick={() => setRole('lecturer')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold rounded-lg transition-all ${role === 'lecturer' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all ${role === 'lecturer' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
           >
             <GraduationCap className="h-4 w-4" /> Lecturer
           </button>
         </div>
 
-        <form onSubmit={handleSignup} className="space-y-6 pb-12">
+        <form onSubmit={handleSignup} className="space-y-4 pb-12">
           <Card className="rounded-[2rem] border-2 border-muted overflow-hidden">
-            <CardContent className="p-6 space-y-4">
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold ml-1">Full Name</Label>
+            <CardContent className="p-5 space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold ml-1">Full Name</Label>
                 <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
                     required 
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Arjun Kothari" 
-                    className="h-12 pl-12 rounded-xl bg-muted/30 border-none" 
+                    className="h-11 pl-10 rounded-xl bg-muted/30 border-none text-sm" 
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold ml-1">College Email</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold ml-1">College Email</Label>
                 <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
                     required 
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@college.edu" 
-                    className="h-12 pl-12 rounded-xl bg-muted/30 border-none" 
+                    className="h-11 pl-10 rounded-xl bg-muted/30 border-none text-sm" 
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold ml-1">Password</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold ml-1">Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
                     required 
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••" 
-                    className="h-12 pl-12 rounded-xl bg-muted/30 border-none" 
+                    className="h-11 pl-10 rounded-xl bg-muted/30 border-none text-sm" 
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold ml-1">College / University</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold ml-1">College / University</Label>
                 <div className="relative">
-                  <Building className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <Building className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
                     required 
                     value={college}
                     onChange={(e) => setCollege(e.target.value)}
                     placeholder="Vani University" 
-                    className="h-12 pl-12 rounded-xl bg-muted/30 border-none" 
+                    className="h-11 pl-10 rounded-xl bg-muted/30 border-none text-sm" 
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold ml-1">Department</Label>
+              {role === 'student' && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold ml-1">College ID Number</Label>
+                  <div className="relative">
+                    <IdCard className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      required 
+                      value={collegeId}
+                      onChange={(e) => setCollegeId(e.target.value)}
+                      placeholder="e.g., VU2024012" 
+                      className="h-11 pl-10 rounded-xl bg-muted/30 border-none text-sm" 
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold ml-1">Department</Label>
                 <div className="relative">
-                  <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
                     required 
                     value={department}
                     onChange={(e) => setDepartment(e.target.value)}
                     placeholder="Computer Science" 
-                    className="h-12 pl-12 rounded-xl bg-muted/30 border-none" 
+                    className="h-11 pl-10 rounded-xl bg-muted/30 border-none text-sm" 
                   />
                 </div>
               </div>
 
               {role === 'student' ? (
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-semibold ml-1">Semester</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold ml-1">Semester</Label>
                     <div className="relative">
-                      <Hash className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input 
                         required 
                         value={semester}
                         onChange={(e) => setSemester(e.target.value)}
                         placeholder="4th" 
-                        className="h-12 pl-12 rounded-xl bg-muted/30 border-none" 
+                        className="h-11 pl-9 rounded-xl bg-muted/30 border-none text-sm" 
                       />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm font-semibold ml-1">Section</Label>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold ml-1">Section</Label>
                     <div className="relative">
-                      <ArrowRight className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <ArrowRight className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input 
                         required 
                         value={section}
                         onChange={(e) => setSection(e.target.value)}
                         placeholder="CSE-A" 
-                        className="h-12 pl-12 rounded-xl bg-muted/30 border-none" 
+                        className="h-11 pl-9 rounded-xl bg-muted/30 border-none text-sm" 
                       />
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold ml-1">Subjects (Comma separated)</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold ml-1">Subjects (Comma separated)</Label>
                   <div className="relative">
-                    <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input 
                       required 
                       value={subjects}
                       onChange={(e) => setSubjects(e.target.value)}
                       placeholder="Economics, OS, DBMS" 
-                      className="h-12 pl-12 rounded-xl bg-muted/30 border-none" 
+                      className="h-11 pl-10 rounded-xl bg-muted/30 border-none text-sm" 
                     />
                   </div>
                 </div>
@@ -294,7 +310,7 @@ export default function SignupPage() {
             {isLoading ? (
               <>
                 <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                Creating Account...
+                Joining...
               </>
             ) : (
               `Sign up as ${role === 'lecturer' ? 'Lecturer' : 'Student'}`
@@ -303,8 +319,8 @@ export default function SignupPage() {
         </form>
 
         <div className="text-center pb-12">
-          <p className="text-muted-foreground">
-            Already have an account? <button onClick={() => router.push('/login')} className="text-primary font-bold">Login</button>
+          <p className="text-xs text-muted-foreground">
+            Already a Vani user? <button onClick={() => router.push('/login')} className="text-primary font-bold">Login</button>
           </p>
         </div>
       </div>
