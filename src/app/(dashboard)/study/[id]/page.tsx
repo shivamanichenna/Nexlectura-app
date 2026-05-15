@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from "react"
@@ -20,7 +21,11 @@ import {
   Download,
   Share2,
   Clock,
-  ArrowRight
+  ArrowRight,
+  MessageSquare,
+  AlertCircle,
+  TrendingUp,
+  Brain
 } from "lucide-react"
 import { useRouter, useParams } from "next/navigation"
 import { useFirestore, useDoc } from '@/firebase'
@@ -68,7 +73,7 @@ export default function LecturePlayerPage() {
     if (!lecture) return;
     setIsGenerating(true)
     try {
-      const transcript = lecture.transcript || "Today we explore the law of demand. As price increases, demand falls. This inverse relationship is key to market dynamics. Let's look at an example: if the price of biryani increases, the demand might fall slightly, but for essential goods, it's different.";
+      const transcript = lecture.transcript || "Today we explore the law of demand. As price increases, demand falls. This inverse relationship is key to market dynamics.";
       
       const [notes, subtitles] = await Promise.all([
         autoLectureNotesSummary({ lectureTranscript: transcript }),
@@ -160,7 +165,6 @@ export default function LecturePlayerPage() {
           {isPlaying ? <Pause className="h-10 w-10 fill-current" /> : <Play className="h-10 w-10 fill-current translate-x-1" />}
         </button>
 
-        {/* Bilingual Subtitles Overlay */}
         <div className="absolute bottom-12 left-0 right-0 px-6 text-center z-10">
           <div className="bg-black/80 backdrop-blur-2xl p-5 rounded-[2.5rem] inline-block max-w-[95%] border border-white/10 shadow-2xl">
             <p className="text-white font-medium text-sm leading-relaxed">
@@ -174,7 +178,6 @@ export default function LecturePlayerPage() {
           </div>
         </div>
 
-        {/* Timeline Progress Bar */}
         <div className="absolute bottom-0 left-0 right-0 p-4 pt-0 z-10 bg-gradient-to-t from-black to-transparent">
           <div className="flex gap-1.5 h-1.5 mb-2 px-2">
             {segments.map((_, i) => (
@@ -192,7 +195,6 @@ export default function LecturePlayerPage() {
         </div>
       </div>
 
-      {/* Classroom Content Recreation */}
       <div className="flex-1 bg-background rounded-t-[3.5rem] mt-[-3rem] relative z-20 shadow-[0_-20px_50px_rgba(0,0,0,0.1)]">
         <div className="p-8 space-y-8">
           <div className="flex justify-between items-start">
@@ -204,7 +206,6 @@ export default function LecturePlayerPage() {
             <Button variant="ghost" size="icon" className="text-muted-foreground bg-muted/30 rounded-full h-10 w-10"><Share2 className="h-5 w-5" /></Button>
           </div>
           
-          {/* Bilingual Toggle & AI Material Generation */}
           <div className="grid grid-cols-2 gap-3">
               <Button 
                 size="lg" 
@@ -294,13 +295,7 @@ export default function LecturePlayerPage() {
                   {segments.map((s, i) => (
                     <Card 
                       key={i} 
-                      onClick={() => {
-                        setActiveSegment(i);
-                        if (audioRef.current) {
-                          // Simple jump logic simulation
-                          toast({ title: "Jumping to Segment", description: `Moving to ${s.title}` });
-                        }
-                      }}
+                      onClick={() => setActiveSegment(i)}
                       className={`rounded-[1.5rem] border-2 transition-all cursor-pointer p-5 flex justify-between items-center group ${activeSegment === i ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/20 bg-white'}`}
                     >
                       <div className="space-y-1">
@@ -328,21 +323,30 @@ export default function LecturePlayerPage() {
                         <Sparkles className="h-6 w-6 fill-current" />
                       </div>
                       <div>
-                        <h4 className="font-bold text-lg">Exam Predictor</h4>
-                        <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Unit 1 Analysis</p>
+                        <h4 className="font-bold text-lg">Exam Prep Assistant</h4>
+                        <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Context-Aware Insights</p>
                       </div>
                     </div>
                     
                     <div className="space-y-4">
-                       <p className="text-sm text-white/80 leading-relaxed font-medium italic">
-                         {aiData?.examSummary || "Gen AI is analyzing your professor's voice patterns and syllabus to predict important questions."}
-                       </p>
-                       <div className="flex gap-3">
-                         <Button variant="outline" className="flex-1 rounded-2xl border-white/20 text-white hover:bg-white/10 font-bold text-xs h-12" onClick={() => router.push('/tests')}>
-                           Take Practice Quiz
+                       <div className="bg-white/10 p-4 rounded-2xl border border-white/10">
+                          <div className="flex items-center gap-2 mb-2">
+                            <AlertCircle className="h-4 w-4 text-primary" />
+                            <span className="text-[10px] font-bold uppercase">Predicted Important Topics</span>
+                          </div>
+                          <p className="text-sm text-white/80 leading-relaxed font-medium">
+                            {aiData?.examSummary || "Tap 'Gen AI Notes' above to analyze this professor's patterns and predict exam focus."}
+                          </p>
+                       </div>
+                       
+                       <div className="grid gap-3">
+                         <Button onClick={() => router.push('/tests')} className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 font-bold shadow-xl shadow-primary/20 gap-2">
+                           <Brain className="h-5 w-5" />
+                           Take Targeted Quiz
                          </Button>
-                         <Button className="flex-1 rounded-2xl bg-primary hover:bg-primary/90 font-bold text-xs h-12 shadow-xl shadow-primary/20">
-                           Revision Guide
+                         <Button variant="outline" className="w-full h-14 rounded-2xl border-white/20 text-white hover:bg-white/10 font-bold gap-2">
+                           <TrendingUp className="h-5 w-5" />
+                           Review Weak Topics
                          </Button>
                        </div>
                     </div>
@@ -352,10 +356,14 @@ export default function LecturePlayerPage() {
                 <div className="bg-accent/30 p-6 rounded-[2rem] border-2 border-dashed border-primary/20 space-y-4">
                   <h4 className="font-bold text-secondary text-sm flex items-center gap-2">
                     <MessageSquare className="h-4 w-4 text-primary" />
-                    Student Discussions
+                    Student Discussion Hub
                   </h4>
-                  <p className="text-xs text-muted-foreground">Arjun, Sneha and 12 others are discussing "Biryani Analogy" right now.</p>
-                  <Button variant="link" className="text-primary font-bold p-0 text-xs h-auto" onClick={() => router.push('/chat')}>Join Chat Assistant</Button>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Collaborate with classmates on this specific lecture's concepts using Vani AI as a mediator.
+                  </p>
+                  <Button variant="link" className="text-primary font-bold p-0 text-xs h-auto group" onClick={() => router.push('/chat')}>
+                    Join Conversation <ArrowRight className="h-3 w-3 ml-1 group-hover:translate-x-1 transition-transform" />
+                  </Button>
                 </div>
               </TabsContent>
             </ScrollArea>
