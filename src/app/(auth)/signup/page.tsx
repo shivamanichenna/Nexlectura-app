@@ -112,11 +112,11 @@ export default function SignupPage() {
 
       toast({
         title: "Account created!",
-        description: `Welcome to Vani AI, ${name}!`,
+        description: `Welcome to Nexlectra, ${name}!`,
       });
 
       if (typeof window !== 'undefined') {
-        localStorage.setItem('vani-role', role);
+        localStorage.setItem('nexlectra-role', role);
       }
 
       setTimeout(() => {
@@ -142,7 +142,7 @@ export default function SignupPage() {
           <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-primary/10 text-primary mb-4">
             <Sparkles className="h-8 w-8" />
           </div>
-          <h1 className="text-3xl font-headline font-bold text-secondary">Join Vani AI</h1>
+          <h1 className="text-3xl font-headline font-bold text-secondary">Join Nexlectra</h1>
           <p className="text-muted-foreground mt-2 text-sm">Your AI-powered classroom companion.</p>
         </div>
 
@@ -218,7 +218,7 @@ export default function SignupPage() {
                     required 
                     value={college}
                     onChange={(e) => setCollege(e.target.value)}
-                    placeholder="Vani University" 
+                    placeholder="Your University" 
                     className="h-11 pl-10 rounded-xl bg-muted/30 border-none text-sm" 
                   />
                 </div>
@@ -320,7 +320,7 @@ export default function SignupPage() {
 
         <div className="text-center pb-12">
           <p className="text-xs text-muted-foreground">
-            Already a Vani user? <button onClick={() => router.push('/login')} className="text-primary font-bold">Login</button>
+            Already a Nexlectra user? <button onClick={() => router.push('/login')} className="text-primary font-bold">Login</button>
           </p>
         </div>
       </div>

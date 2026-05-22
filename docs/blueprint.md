@@ -1,4 +1,4 @@
-# **App Name**: Vani AI
+# **App Name**: Nexlectra
 
 ## Core Features:
 

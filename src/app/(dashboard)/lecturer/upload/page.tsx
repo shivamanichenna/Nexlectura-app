@@ -111,7 +111,7 @@ export default function UploadLecturePage() {
               .then(() => {
                 toast({
                   title: "Lecture Uploaded!",
-                  description: "Your lecture is being processed by Vani AI.",
+                  description: "Your lecture is being processed by Nexlectra.",
                 })
                 router.push('/lecturer')
               })
@@ -264,7 +264,7 @@ export default function UploadLecturePage() {
           Cloud Archiving
         </h4>
         <p className="text-xs text-white/70 leading-relaxed">
-          Your lectures are stored securely. Vani AI will automatically begin transcription and summary generation once the upload completes.
+          Your lectures are stored securely. Nexlectra will automatically begin transcription and summary generation once the upload completes.
         </p>
       </div>
     </div>

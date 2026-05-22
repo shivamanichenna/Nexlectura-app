@@ -1,281 +1,146 @@
-
 'use client';
 
-import { useState, useMemo } from "react"
-import { Card, CardContent } from "@/components/ui/card"
+import { useState } from "react"
 import { Input } from "@/components/ui/input"
-import { Search, Play, Clock, BookOpen, ChevronRight, Filter, Bookmark, Loader2, Star, Sparkles, Folder, FileText, CheckCircle2, AlertCircle } from "lucide-react"
+import { Search, Bell, SlidersHorizontal, Star, Clock } from "lucide-react"
 import Image from "next/image"
-import Link from "next/link"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { useFirestore, useCollection, useUser } from '@/firebase'
-import { collection, query, where, orderBy } from 'firebase/firestore'
-import { formatDistanceToNow } from 'date-fns'
-import { Progress } from "@/components/ui/progress"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Card, CardContent } from "@/components/ui/card"
+
+const courses = [
+  {
+    id: 1,
+    category: "COMPUTER SCIENCE",
+    title: "Applied Machine Learning Fundamentals",
+    description: "Master the core concepts of ML using Python. Perfect for beginners looking t...",
+    hours: 12,
+    price: "$49",
+    rating: 4.9,
+    reviews: "1.2k",
+    image: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=600&auto=format&fit=crop"
+  },
+  {
+    id: 2,
+    category: "DESIGN & UX",
+    title: "Advanced UI Patterns & Glassmorphism",
+    description: "Elevate your interface design with modern aesthetic principles and...",
+    hours: 8,
+    price: "$79",
+    rating: 4.8,
+    reviews: "850",
+    image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=600&auto=format&fit=crop"
+  },
+  {
+    id: 3,
+    category: "BUSINESS AI",
+    title: "AI for Executive Decision Making",
+    description: "Learn how to leverage generative AI models to analyze market trends and...",
+    hours: 4,
+    price: "Free",
+    rating: 4.7,
+    reviews: "2.1k",
+    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=600&auto=format&fit=crop"
+  }
+]
 
 export default function StudyHubPage() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedSubject, setSelectedSubject] = useState<string | null>(null)
-  const db = useFirestore()
-  const { user } = useUser()
+  const [activeTab, setActiveTab] = useState("All Courses")
 
-  const subjects = [
-    { name: "Economics", color: "bg-orange-500", code: "ECO101", lectures: 12, assignments: 2 },
-    { name: "Mathematics", color: "bg-blue-500", code: "MAT202", lectures: 8, assignments: 1 },
-    { name: "Physics", color: "bg-purple-500", code: "PHY301", lectures: 15, assignments: 3 },
-    { name: "DBMS", color: "bg-emerald-500", code: "CS401", lectures: 10, assignments: 2 },
-  ]
-
-  const assignments = [
-    { id: 1, title: "Supply & Demand Graph Analysis", subject: "Economics", due: "2 days left", status: "Pending", progress: 0 },
-    { id: 2, title: "Database Normalization Task", subject: "DBMS", due: "5 days left", status: "In Progress", progress: 65 },
-    { id: 3, title: "Newtonian Mechanics Problems", subject: "Physics", due: "Completed", status: "Submitted", progress: 100 },
-  ]
-
-  const allLecturesQuery = useMemo(() => {
-    if (!db) return null;
-    return query(collection(db, 'lectures'), orderBy('createdAt', 'desc'));
-  }, [db]);
-
-  const { data: lectures, loading } = useCollection(allLecturesQuery);
-
-  // Feature 16: Fetch bookmarked lectures
-  const bookmarksQuery = useMemo(() => {
-    if (!db || !user) return null;
-    return query(collection(db, 'users', user.uid, 'bookmarks'));
-  }, [db, user]);
-
-  const { data: bookmarkedLectures, loading: bookmarksLoading } = useCollection(bookmarksQuery);
-
-  const processedLectures = useMemo(() => {
-    if (!lectures) return [];
-    
-    return [...lectures]
-      .filter(lec => {
-        const matchesSearch = lec.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                             lec.subject?.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesSubject = !selectedSubject || lec.subject === selectedSubject;
-        return matchesSearch && matchesSubject;
-      });
-  }, [lectures, searchQuery, selectedSubject]);
+  const tabs = ["All Courses", "Computer Science", "Design", "Business"]
 
   return (
-    <div className="space-y-6 pb-24">
-      {/* Subject Hub Header */}
-      <div className="space-y-1 px-1">
-        <h1 className="text-3xl font-headline font-bold text-secondary">Subject Hub</h1>
-        <p className="text-muted-foreground text-sm font-medium tracking-tight">Your bilingual library of classroom records.</p>
+    <div className="flex flex-col min-h-screen bg-[#fafafa] -mt-6 pb-24">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 pt-6 pb-4 bg-[#fafafa] sticky top-0 z-10">
+        <Avatar className="h-10 w-10 shadow-sm border border-gray-100">
+          <AvatarImage src="https://i.pravatar.cc/150?img=47" />
+          <AvatarFallback>U</AvatarFallback>
+        </Avatar>
+        <span className="font-bold text-xl text-[#b84e14]">Nexlectra</span>
+        <button className="text-gray-800 hover:opacity-70 transition-opacity">
+          <Bell className="h-6 w-6" />
+        </button>
       </div>
 
-      <div className="flex gap-3">
-        <div className="relative flex-1 group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+      {/* Search */}
+      <div className="px-4 mt-2 mb-6 relative">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
           <Input 
-            placeholder="Search topics, concepts..." 
+            placeholder="What do you want to learn today?" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-14 pl-12 rounded-[1.25rem] bg-muted/40 border-none focus-visible:ring-primary/20 text-sm font-medium shadow-none" 
+            className="h-14 pl-12 pr-14 rounded-full bg-white border border-gray-200 focus-visible:ring-[#ff6b2b]/20 text-sm shadow-[0_2px_10px_rgba(0,0,0,0.02)]" 
           />
+          <button className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-gray-600 transition-colors border border-gray-100">
+            <SlidersHorizontal className="h-5 w-5" />
+          </button>
         </div>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => setSelectedSubject(null)}
-          className={`h-14 w-14 rounded-2xl transition-all ${!selectedSubject ? 'bg-primary/10 text-primary' : 'bg-muted/40 text-muted-foreground'}`}
-        >
-          <Filter className="h-6 w-6" />
-        </Button>
       </div>
 
-      <Tabs defaultValue="subjects" className="w-full">
-        <TabsList className="bg-transparent h-auto p-0 gap-6 border-b-2 border-muted rounded-none w-full justify-start mb-6 overflow-x-auto no-scrollbar">
-          <TabsTrigger value="subjects" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-4 data-[state=active]:border-primary rounded-none pb-3 font-bold px-0 text-sm tracking-tight">Subjects</TabsTrigger>
-          <TabsTrigger value="assignments" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-4 data-[state=active]:border-primary rounded-none pb-3 font-bold px-0 text-sm tracking-tight">Assignments</TabsTrigger>
-          <TabsTrigger value="saved" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-4 data-[state=active]:border-primary rounded-none pb-3 font-bold px-0 text-sm tracking-tight">Bookmarks</TabsTrigger>
-        </TabsList>
+      {/* Tabs */}
+      <div className="px-4 mb-6 overflow-x-auto hide-scrollbar flex gap-2">
+        {tabs.map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`whitespace-nowrap px-5 py-2.5 rounded-full text-sm font-semibold transition-all ${
+              activeTab === tab 
+                ? "bg-[#1a1e29] text-white shadow-md" 
+                : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
 
-        <TabsContent value="subjects" className="space-y-8 m-0 animate-in fade-in duration-500">
-          <div className="grid grid-cols-2 gap-4">
-            {subjects.map((sub, i) => (
-              <Card 
-                key={i} 
-                onClick={() => setSelectedSubject(sub.name)}
-                className={`rounded-[2.5rem] border-none shadow-xl transition-all cursor-pointer group p-6 overflow-hidden relative ${selectedSubject === sub.name ? 'ring-2 ring-primary bg-primary/5' : 'bg-white hover:bg-accent/30'}`}
-              >
-                <div className="absolute -top-4 -right-4 w-16 h-16 bg-muted/10 rounded-full group-hover:scale-150 transition-transform" />
-                <div className={`h-14 w-14 rounded-2xl ${sub.color} flex items-center justify-center text-white shadow-xl mb-4 transition-all group-hover:rotate-6`}>
-                  <BookOpen className="h-7 w-7" />
-                </div>
-                <div className="space-y-1">
-                   <h4 className="font-bold text-secondary text-sm leading-tight">{sub.name}</h4>
-                   <div className="flex items-center justify-between">
-                     <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">{sub.code}</p>
-                     <p className="text-[9px] text-primary font-bold uppercase">{sub.lectures} Class</p>
-                   </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-
-          <div className="space-y-5">
-            <div className="flex items-center justify-between px-1">
-              <h3 className="font-headline font-bold text-lg flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                {selectedSubject ? `${selectedSubject} Records` : 'Recent Classroom Feed'}
-              </h3>
-              <Badge variant="outline" className="text-[10px] font-bold border-muted-foreground/20">Bilingual Active</Badge>
+      {/* Courses */}
+      <div className="px-4 space-y-6">
+        {courses.map((course) => (
+          <Card key={course.id} className="rounded-3xl border-none shadow-[0_8px_30px_rgb(0,0,0,0.04)] bg-white overflow-hidden">
+            <div className="relative h-48 w-full">
+              <Image 
+                src={course.image} 
+                alt={course.title} 
+                fill 
+                className="object-cover"
+              />
+              <div className="absolute top-4 right-4 px-3 py-1 bg-white rounded-lg shadow-md">
+                <span className={`font-bold text-sm ${course.price === 'Free' ? 'text-white' : 'text-[#ff6b2b]'}`}>
+                  {course.price === 'Free' ? <span className="px-1 text-[#ff6b2b]">Free</span> : course.price}
+                </span>
+              </div>
+              <div className="absolute bottom-4 left-4 px-3 py-1.5 bg-[#1a1e29]/80 backdrop-blur-md rounded-lg text-white flex items-center gap-1.5 shadow-lg">
+                <Star className="h-3.5 w-3.5 fill-white" />
+                <span className="font-semibold text-xs tracking-wide">{course.rating} ({course.reviews})</span>
+              </div>
             </div>
-            
-            {loading ? (
-              <div className="flex justify-center p-16">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <CardContent className="p-5">
+              <p className="text-[#64748b] text-[10px] font-bold tracking-widest uppercase mb-2">
+                {course.category}
+              </p>
+              <h3 className="font-bold text-gray-900 text-lg leading-tight mb-2">
+                {course.title}
+              </h3>
+              <p className="text-gray-500 text-sm leading-relaxed mb-4">
+                {course.description}
+              </p>
+              <div className="flex items-center justify-between mt-auto">
+                <div className="flex items-center gap-1.5 text-gray-600">
+                  <Clock className="h-4 w-4" />
+                  <span className="font-medium text-sm">{course.hours} Hours</span>
+                </div>
+                <Button className="bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-xl px-5 font-bold h-10 shadow-none">
+                  Details
+                </Button>
               </div>
-            ) : processedLectures.length > 0 ? (
-              <div className="grid gap-4">
-                {processedLectures.map((lec: any) => (
-                  <Link href={`/study/${lec.id}`} key={lec.id}>
-                    <Card className="rounded-[2.25rem] border-none bg-white shadow-sm hover:shadow-xl transition-all cursor-pointer overflow-hidden group border-2 border-transparent hover:border-primary/20">
-                      <CardContent className="p-4 flex gap-5">
-                        <div className="relative w-24 h-24 rounded-[1.75rem] overflow-hidden shrink-0 shadow-inner">
-                          <Image src={`https://picsum.photos/seed/${lec.id}/200/200`} alt="thumb" fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
-                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Play className="h-8 w-8 text-white fill-white" />
-                          </div>
-                        </div>
-                        <div className="flex-1 flex flex-col justify-between py-1">
-                          <div className="space-y-1">
-                            <div className="flex justify-between items-start gap-2">
-                              <h4 className="font-bold text-secondary text-sm leading-tight line-clamp-2">{lec.title}</h4>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Badge className="bg-muted text-[8px] font-bold text-muted-foreground h-4 py-0 uppercase border-none">{lec.subject}</Badge>
-                              {lec.status === 'processing' && <Badge variant="secondary" className="text-[8px] h-4 py-0 uppercase">Syncing</Badge>}
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-tight text-muted-foreground/60">
-                            <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {lec.lecturerName?.split(' ')[1] || 'Sir'}</span>
-                            <span>{lec.createdAt ? formatDistanceToNow(lec.createdAt.toDate(), { addSuffix: true }) : 'Live'}</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center p-12 bg-accent/30 rounded-[2.5rem] border-2 border-dashed border-primary/10">
-                <Folder className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
-                <p className="text-sm font-bold text-muted-foreground">No records found for "{searchQuery || selectedSubject}"</p>
-                <p className="text-xs text-muted-foreground/60 mt-1">Try searching for a broad topic or clear filters.</p>
-              </div>
-            )}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="assignments" className="animate-in fade-in duration-500">
-           <div className="space-y-4">
-             <div className="flex items-center justify-between px-1">
-                <h3 className="font-headline font-bold text-lg">Weekly Assignments</h3>
-                <Badge className="bg-orange-100 text-orange-600 border-none font-bold text-[10px]">2 ACTION REQUIRED</Badge>
-             </div>
-             <div className="grid gap-3">
-               {assignments.map((task) => (
-                 <Card key={task.id} className="rounded-3xl border-none bg-white shadow-sm border-2 border-muted hover:border-primary/10 transition-all cursor-pointer group">
-                   <CardContent className="p-5 flex items-center gap-4">
-                     <div className={`h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 ${task.status === 'Submitted' ? 'bg-emerald-100 text-emerald-600' : 'bg-orange-100 text-orange-600'}`}>
-                        {task.status === 'Submitted' ? <CheckCircle2 className="h-6 w-6" /> : <FileText className="h-6 w-6" />}
-                     </div>
-                     <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start">
-                          <h4 className="font-bold text-sm text-secondary truncate">{task.title}</h4>
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className="text-[9px] h-4 py-0 font-bold uppercase">{task.subject}</Badge>
-                          <span className={`text-[10px] font-bold flex items-center gap-1 ${task.status === 'Submitted' ? 'text-emerald-600' : 'text-orange-600'}`}>
-                             <Clock className="h-3 w-3" /> {task.due}
-                          </span>
-                        </div>
-                        {task.status !== 'Submitted' && (
-                          <div className="mt-3 space-y-1.5">
-                             <div className="flex justify-between text-[8px] font-bold uppercase text-muted-foreground">
-                               <span>Draft Progress</span>
-                               <span>{task.progress}%</span>
-                             </div>
-                             <Progress value={task.progress} className="h-1.5" />
-                          </div>
-                        )}
-                     </div>
-                     <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
-                   </CardContent>
-                 </Card>
-               ))}
-             </div>
-             
-             <Card className="rounded-[2rem] bg-accent/50 border border-accent p-6 flex gap-4 mt-4">
-               <AlertCircle className="h-6 w-6 text-primary shrink-0" />
-               <div className="space-y-1">
-                  <h4 className="font-bold text-secondary text-sm">AI Drafting Tool</h4>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Vani AI can help you structure your assignments based on classroom notes. Tap on a task to start drafting.
-                  </p>
-               </div>
-             </Card>
-           </div>
-        </TabsContent>
-
-        <TabsContent value="saved" className="animate-in fade-in duration-500">
-           <div className="grid grid-cols-2 gap-4">
-             <Card className="rounded-3xl border-none bg-blue-50/50 p-6 flex flex-col items-center gap-4 text-center cursor-pointer hover:bg-blue-100/50 transition-colors group">
-                <div className="h-12 w-12 bg-white rounded-2xl flex items-center justify-center text-blue-500 shadow-sm group-hover:scale-110 transition-transform">
-                   <Bookmark className="h-6 w-6 fill-current" />
-                </div>
-                <div>
-                   <h4 className="font-bold text-secondary text-sm">Saved Highlights</h4>
-                   <p className="text-[10px] text-muted-foreground font-bold uppercase mt-1">{bookmarkedLectures?.length || 0} Explanations</p>
-                </div>
-             </Card>
-             <Card className="rounded-3xl border-none bg-orange-50/50 p-6 flex flex-col items-center gap-4 text-center cursor-pointer hover:bg-orange-100/50 transition-colors group">
-                <div className="h-12 w-12 bg-white rounded-2xl flex items-center justify-center text-orange-500 shadow-sm group-hover:scale-110 transition-transform">
-                   <Sparkles className="h-6 w-6 fill-current" />
-                </div>
-                <div>
-                   <h4 className="font-bold text-secondary text-sm">AI Summaries</h4>
-                   <p className="text-[10px] text-muted-foreground font-bold uppercase mt-1">Active Hub</p>
-                </div>
-             </Card>
-           </div>
-           
-           <div className="mt-8 space-y-4">
-              <h3 className="font-headline font-bold text-lg px-1">Recently Bookmarked</h3>
-              {bookmarksLoading ? (
-                <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
-              ) : bookmarkedLectures && bookmarkedLectures.length > 0 ? (
-                <div className="grid gap-3">
-                  {bookmarkedLectures.map((lec: any) => (
-                    <Link href={`/study/${lec.id}`} key={lec.id}>
-                      <Card className="rounded-2xl border-none bg-white shadow-sm p-4 flex gap-4 items-center">
-                        <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                          <Bookmark className="h-6 w-6 fill-current" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-bold text-secondary text-sm truncate">{lec.title}</h4>
-                          <p className="text-[10px] text-muted-foreground uppercase font-bold">{lec.subject}</p>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                      </Card>
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <div className="p-8 text-center bg-muted/20 rounded-[2.5rem] border-2 border-dashed border-muted">
-                  <p className="text-xs text-muted-foreground font-medium italic">"Tap the bookmark icon in any lecture player to save important explanations here."</p>
-                </div>
-              )}
-           </div>
-        </TabsContent>
-      </Tabs>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   )
 }

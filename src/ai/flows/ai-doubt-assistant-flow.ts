@@ -23,7 +23,7 @@ export type AIDoubtAssistantInput = z.infer<typeof AIDoubtAssistantInputSchema>;
 
 // Output Schema
 const AIDoubtAssistantOutputSchema = z.object({
-  answer: z.string().describe("The AI tutor's explanation or answer to the student's question. Use a friendly 'Vani' persona."),
+  answer: z.string().describe("The AI tutor's explanation or answer to the student's question. Use a friendly 'Nexlectra' persona."),
   suggestedFollowUpQuestions: z.array(z.string()).optional().describe("A list of suggested follow-up questions the student might ask.")
 });
 export type AIDoubtAssistantOutput = z.infer<typeof AIDoubtAssistantOutputSchema>;
@@ -38,7 +38,7 @@ const aiDoubtAssistantPrompt = ai.definePrompt({
   name: 'aiDoubtAssistantPrompt',
   input: {schema: AIDoubtAssistantInputSchema},
   output: {schema: AIDoubtAssistantOutputSchema},
-  prompt: `You are Vani, a friendly, patient, and knowledgeable AI tutor designed to help students understand their lecture content. 
+  prompt: `You are Nexlectra, a friendly, patient, and knowledgeable AI tutor designed to help students understand their lecture content. 
 You are like a helpful classmate or a supportive teacher who speaks the student's local language.
 
 Here is the relevant lecture content for context:

@@ -1,200 +1,206 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { 
-  Settings, 
-  Award, 
-  Calendar, 
-  BookOpen, 
+  Bell, 
+  Edit2, 
+  Share2, 
+  Network, 
+  Maximize2, 
   Clock, 
-  Share2,
-  ChevronRight,
-  LogOut,
-  Trophy,
-  Users,
-  Star,
-  Zap,
-  Medal,
-  Target
+  TrendingUp, 
+  Award, 
+  Moon, 
+  BellRing,
+  LogOut
 } from "lucide-react"
 import { useRouter, usePathname } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
-import { useAuth } from '@/firebase'
+import { useAuth, useUser } from '@/firebase'
 import { signOut } from 'firebase/auth'
+import { Switch } from "@/components/ui/switch"
 
 export default function ProfilePage() {
   const router = useRouter()
   const pathname = usePathname()
   const { toast } = useToast()
   const auth = useAuth()
-  const [isLecturer, setIsLecturer] = useState(pathname.includes('/lecturer'))
+  const { user } = useUser()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-    const savedRole = localStorage.getItem('vani-role')
-    setIsLecturer(pathname.includes('/lecturer') || savedRole === 'lecturer')
-  }, [pathname])
+  }, [])
 
   const handleSignOut = async () => {
     if (!auth) return
-
-    toast({
-      title: "Signing out...",
-      description: "Please wait a moment.",
-    })
-    
+    toast({ title: "Signing out...", description: "Please wait a moment." })
     try {
       await signOut(auth)
-      localStorage.removeItem('vani-role')
-      toast({
-        title: "Signed out successfully",
-        description: "Come back soon to continue your journey!",
-      })
+      localStorage.removeItem('nexlectra-role')
       router.push("/login")
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Sign out failed",
-        description: error.message || "An error occurred during sign out.",
-      })
+      toast({ variant: "destructive", title: "Sign out failed", description: error.message })
     }
-  }
-
-  const settingsItems = [
-    { icon: Settings, label: "Account Settings", desc: "Security, Privacy, Connected IDs" },
-    { icon: Share2, label: "Refer a colleague", desc: "Invite others to Vani AI" },
-    { icon: LogOut, label: "Sign Out", desc: "Logout from this device", color: "text-destructive", action: handleSignOut },
-  ]
-
-  const userData = isLecturer ? {
-    name: "Prof. S. Murali Krishna",
-    title: "Senior Lecturer • Economics",
-    stats: [
-      { icon: Users, value: "842", label: "Students" },
-      { icon: BookOpen, value: "24", label: "Lectures" },
-      { icon: Clock, value: "18h", label: "Teaching" },
-    ]
-  } : {
-    name: "Arjun Kothari",
-    title: "B.Tech Economics • Semester 4",
-    xp: 2450,
-    level: 12,
-    stats: [
-      { icon: Clock, value: "124h", label: "Learning" },
-      { icon: BookOpen, value: "48", label: "Lectures" },
-      { icon: Calendar, value: "12d", label: "Streak" },
-    ]
   }
 
   if (!mounted) return null
 
+  const userName = user?.displayName || user?.email?.split('@')[0] || "Eleanor Vance"
+
   return (
-    <div className="space-y-8 pb-10">
-      {/* Profile Header */}
-      <div className="flex flex-col items-center text-center space-y-4 pt-4">
-        <div className="relative">
-          <Avatar className="h-28 w-28 border-4 border-white shadow-xl">
-            <AvatarImage src={`https://picsum.photos/seed/${isLecturer ? 'prof' : 'student'}-profile/200/200`} />
-            <AvatarFallback>{userData.name[0]}</AvatarFallback>
+    <div className="flex flex-col min-h-screen bg-[#fafafa] -mt-6 pb-24 font-sans">
+      {/* Top Bar */}
+      <div className="flex items-center justify-between px-6 py-4 mt-2">
+        <Avatar className="h-10 w-10 border border-gray-200">
+          <AvatarImage src={`https://i.pravatar.cc/150?u=${user?.uid || 'eleanor'}`} />
+          <AvatarFallback>EV</AvatarFallback>
+        </Avatar>
+        <h1 className="text-xl font-bold text-[#b04a11]" style={{ fontFamily: 'Georgia, serif' }}>
+          Nexlectra
+        </h1>
+        <button className="text-gray-800 hover:opacity-70 transition-opacity">
+          <Bell className="h-6 w-6" />
+        </button>
+      </div>
+
+      <div className="px-5 space-y-6">
+        {/* Profile Header */}
+        <div className="flex flex-col items-center text-center mt-2">
+          <Avatar className="h-28 w-28 border-4 border-white shadow-xl mb-4">
+            <AvatarImage src={`https://i.pravatar.cc/150?u=${user?.uid || 'eleanor'}`} />
+            <AvatarFallback>{userName[0]}</AvatarFallback>
           </Avatar>
-          <div className="absolute -bottom-1 -right-1 bg-primary text-white p-1.5 rounded-full border-2 border-white shadow-lg">
-             {isLecturer ? <Award className="h-4 w-4 fill-current" /> : <Trophy className="h-4 w-4 fill-current" />}
+          <h2 className="text-3xl font-bold text-gray-900 mb-1" style={{ fontFamily: 'Georgia, serif' }}>
+            {userName}
+          </h2>
+          <p className="text-gray-500 text-sm font-medium mb-5">
+            Senior Data Scientist · Deep Learning Track
+          </p>
+          
+          <div className="flex items-center gap-3 w-full justify-center">
+            <Button className="bg-[#b04a11] hover:bg-[#8e3b0d] text-white rounded-full px-6 shadow-md shadow-[#b04a11]/20 gap-2 h-11 w-40 font-semibold">
+              <Edit2 className="h-4 w-4" />
+              Edit Profile
+            </Button>
+            <Button variant="outline" className="rounded-full px-6 bg-white border-gray-200 shadow-sm gap-2 h-11 w-40 font-semibold text-gray-700 hover:bg-gray-50">
+              <Share2 className="h-4 w-4" />
+              Share
+            </Button>
           </div>
         </div>
-        <div className="space-y-1">
-          <h1 className="text-2xl font-headline font-bold text-secondary">{userData.name}</h1>
-          <p className="text-muted-foreground text-sm font-medium">{userData.title}</p>
-          {!isLecturer && (
-            <div className="flex items-center gap-2 justify-center mt-3">
-               <Badge className="bg-secondary text-white border-none px-3 py-1 gap-1.5">
-                  <Star className="h-3 w-3 text-primary fill-primary" />
-                  Level {userData.level}
-               </Badge>
-               <Badge variant="outline" className="border-primary text-primary font-bold">Silver II</Badge>
-            </div>
-          )}
-        </div>
-      </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-3 gap-4">
-        {userData.stats.map((stat, i) => (
-          <div key={i} className="flex flex-col items-center gap-1">
-             <div className="h-10 w-10 bg-muted/50 rounded-xl flex items-center justify-center text-muted-foreground">
-               <stat.icon className="h-5 w-5" />
-             </div>
-             <p className="font-bold text-secondary mt-1">{stat.value}</p>
-             <p className="text-[10px] font-bold text-muted-foreground uppercase">{stat.label}</p>
+        {/* Knowledge Map */}
+        <div className="bg-gradient-to-br from-[#f8f6f4] to-[#f0e9e1] rounded-[2rem] p-6 relative overflow-hidden border border-[#e6dbce] shadow-sm">
+          <div className="absolute top-4 right-4 bg-white/60 p-2 rounded-full backdrop-blur-sm">
+            <Maximize2 className="h-4 w-4 text-gray-700" />
           </div>
-        ))}
-      </div>
-
-      {/* Achievement & Milestones (Feature 15) */}
-      {!isLecturer && (
-        <div className="space-y-6">
-          <div className="space-y-4">
-            <div className="flex justify-between items-center px-1">
-              <h3 className="font-headline font-bold text-lg">Milestones</h3>
-              <span className="text-xs font-bold text-primary">6/12 Badges</span>
-            </div>
-            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-              {[
-                { label: "Night Owl", icon: Medal, color: "text-indigo-500", bg: "bg-indigo-50" },
-                { label: "Top 1%", icon: Trophy, color: "text-yellow-500", bg: "bg-yellow-50" },
-                { label: "Early Bird", icon: Zap, color: "text-primary", bg: "bg-primary/5" },
-                { label: "Consistency", icon: Target, color: "text-emerald-500", bg: "bg-emerald-50" },
-              ].map((badge, i) => (
-                <div key={i} className={`h-24 w-24 shrink-0 ${badge.bg} rounded-[2rem] flex flex-col items-center justify-center border-2 border-white shadow-sm transition-transform hover:scale-105 cursor-pointer`}>
-                  <badge.icon className={`h-10 w-10 ${badge.color}`} />
-                  <span className="text-[10px] font-bold mt-2 text-secondary">{badge.label}</span>
-                </div>
-              ))}
-            </div>
+          <div className="flex items-center gap-2 mb-1">
+            <Network className="h-5 w-5 text-[#b04a11]" />
+            <h3 className="text-xl text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>Knowledge Map</h3>
+          </div>
+          <p className="text-sm text-gray-600 mb-8 font-medium">Your neural pathway of mastered concepts.</p>
+          
+          {/* Faux network visualization with CSS */}
+          <div className="h-40 w-full relative flex items-center justify-center opacity-40">
+             <div className="absolute w-[1px] h-32 bg-[#b04a11] rotate-45 transform origin-center"></div>
+             <div className="absolute w-[1px] h-32 bg-[#b04a11] -rotate-45 transform origin-center"></div>
+             <div className="absolute w-[1px] h-24 bg-[#b04a11] rotate-12 transform origin-center"></div>
+             <div className="absolute w-[1px] h-40 bg-[#b04a11] -rotate-12 transform origin-center"></div>
+             <div className="w-2 h-2 rounded-full bg-[#b04a11] absolute top-1/4 left-1/4"></div>
+             <div className="w-3 h-3 rounded-full bg-[#b04a11] absolute top-1/2 left-1/2"></div>
+             <div className="w-2 h-2 rounded-full bg-[#b04a11] absolute bottom-1/4 right-1/4"></div>
+             <div className="w-1.5 h-1.5 rounded-full bg-[#b04a11] absolute top-1/3 right-1/3"></div>
           </div>
 
-          <Card className="rounded-3xl border-none bg-secondary text-white p-6 relative overflow-hidden">
-             <div className="absolute bottom-0 right-0 w-24 h-24 bg-primary/20 rounded-full blur-2xl" />
-             <div className="flex items-center justify-between relative z-10">
-                <div className="space-y-1">
-                   <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Global Rank</p>
-                   <h4 className="text-2xl font-headline font-bold">#482</h4>
-                   <p className="text-[10px] text-white/50">Top 15% of Vani Students</p>
-                </div>
-                <div className="text-right">
-                   <p className="text-xs font-bold">Next Rank</p>
-                   <p className="text-sm font-bold text-primary">Gold III</p>
-                </div>
-             </div>
-          </Card>
+          <div className="flex gap-2 relative z-10 overflow-x-auto no-scrollbar pb-1 -mx-2 px-2">
+            <div className="bg-white/80 backdrop-blur-sm px-4 py-1.5 rounded-full text-xs font-semibold text-gray-700 whitespace-nowrap shadow-sm">
+              Machine Learning
+            </div>
+            <div className="bg-[#e66c2c] text-white px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shadow-sm flex items-center gap-1.5">
+              <Network className="h-3 w-3" /> Neural Networks
+            </div>
+            <div className="bg-white/80 backdrop-blur-sm px-4 py-1.5 rounded-full text-xs font-semibold text-gray-700 whitespace-nowrap shadow-sm">
+              Python API
+            </div>
+          </div>
         </div>
-      )}
 
-      {/* Settings List */}
-      <div className="space-y-3">
-        {settingsItems.map((item, i) => (
-          <Card 
-            key={i} 
-            className="rounded-2xl border-none bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer group"
-            onClick={item.action}
-          >
-            <CardContent className="p-4 flex items-center gap-4">
-               <div className={`h-10 w-10 rounded-xl bg-white flex items-center justify-center ${item.color || 'text-muted-foreground'}`}>
-                 <item.icon className="h-5 w-5" />
-               </div>
-               <div className="flex-1">
-                  <h4 className={`font-bold text-sm ${item.color || 'text-secondary'}`}>{item.label}</h4>
-                  <p className="text-xs text-muted-foreground">{item.desc}</p>
-               </div>
-               <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
-            </CardContent>
-          </Card>
-        ))}
+        {/* Deep Focus Time */}
+        <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+          <div className="flex items-center gap-2 text-gray-600 mb-4 uppercase tracking-widest text-xs font-bold">
+            <Clock className="h-4 w-4" />
+            <span>Deep Focus Time</span>
+          </div>
+          <div className="flex items-baseline gap-2 mb-2">
+            <span className="text-5xl font-bold text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>142</span>
+            <span className="text-xl text-gray-500 font-medium" style={{ fontFamily: 'Georgia, serif' }}>hrs</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[#b04a11] text-xs font-bold">
+            <TrendingUp className="h-3.5 w-3.5" />
+            <span>+12% vs last month</span>
+          </div>
+        </div>
+
+        {/* Topics Mastered */}
+        <div className="bg-[#2a2e37] rounded-3xl p-6 shadow-lg">
+          <div className="flex items-center gap-2 text-white/80 mb-4 uppercase tracking-widest text-xs font-bold">
+            <Award className="h-4 w-4" />
+            <span>Topics Mastered</span>
+          </div>
+          <div className="text-5xl font-bold text-white mb-6" style={{ fontFamily: 'Georgia, serif' }}>
+            48
+          </div>
+          <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden mb-3">
+            <div className="w-[90%] h-full bg-[#ff6b2b] rounded-full"></div>
+          </div>
+          <p className="text-white/60 text-xs font-medium">Next milestone at 50</p>
+        </div>
+
+        {/* System Preferences */}
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] overflow-hidden">
+          <div className="px-6 py-5 border-b border-gray-50">
+            <h3 className="text-xl text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>System Preferences</h3>
+          </div>
+          
+          <div className="px-6 py-5 flex items-center justify-between border-b border-gray-50">
+            <div className="flex items-center gap-4">
+              <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600">
+                <Moon className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>Dark Interface</p>
+                <p className="text-xs text-gray-500">Reduce glare in low-light environments</p>
+              </div>
+            </div>
+            <Switch />
+          </div>
+
+          <div className="px-6 py-5 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="h-10 w-10 rounded-full bg-orange-50 flex items-center justify-center text-[#b04a11]">
+                <BellRing className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-900" style={{ fontFamily: 'Georgia, serif' }}>Smart Notifications</p>
+                <p className="text-xs text-gray-500 max-w-[200px]">AI-driven nudges for optimal learning retention</p>
+              </div>
+            </div>
+            <Switch defaultChecked className="data-[state=checked]:bg-[#b04a11]" />
+          </div>
+        </div>
+
+        <Button 
+          variant="ghost" 
+          onClick={handleSignOut}
+          className="w-full text-red-500 hover:text-red-600 hover:bg-red-50 gap-2 font-bold h-12 rounded-2xl"
+        >
+          <LogOut className="h-5 w-5" />
+          Sign Out
+        </Button>
       </div>
     </div>
   )

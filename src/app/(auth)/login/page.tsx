@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, Suspense } from "react"
@@ -6,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Sparkles, Mail, Lock, GraduationCap, User, Loader2, AlertCircle, Info } from "lucide-react"
+import { ArrowLeft, HelpCircle, EyeOff, Eye, Loader2, AlertCircle } from "lucide-react"
 import { signInWithEmailAndPassword, AuthError } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase';
@@ -26,6 +25,7 @@ function LoginForm() {
   const [role, setRole] = useState<'student' | 'lecturer'>('student')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [configError, setConfigError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -62,7 +62,7 @@ function LoginForm() {
         const userRole = userData.role;
 
         if (typeof window !== 'undefined') {
-          localStorage.setItem('vani-role', userRole);
+          localStorage.setItem('nexlectra-role', userRole);
         }
 
         toast({
@@ -95,20 +95,31 @@ function LoginForm() {
   }
 
   const fillDemo = () => {
-    setEmail(role === 'lecturer' ? 'lecturer@vani.ai' : 'student@vani.ai')
+    setEmail(role === 'lecturer' ? 'lecturer@nexlectra.com' : 'student@nexlectra.com')
     setPassword('password123')
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background p-6 max-w-md mx-auto">
-      <div className="flex-1 flex flex-col pt-12">
+    <div className="flex flex-col min-h-screen bg-background">
+      {/* Top App Bar */}
+      <div className="flex items-center justify-between p-4 px-6">
+        <button onClick={() => router.back()} className="text-foreground hover:opacity-70 transition-opacity">
+          <ArrowLeft className="h-6 w-6 text-primary" />
+        </button>
+        <span className="font-headline font-bold text-lg text-primary">Nexlectra</span>
+        <button className="text-foreground hover:opacity-70 transition-opacity">
+          <HelpCircle className="h-6 w-6 text-primary" />
+        </button>
+      </div>
+
+      <div className="flex-1 flex flex-col pt-8 px-6 max-w-md mx-auto w-full">
         <div className="mb-10 text-center">
-          <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-primary/10 text-primary mb-4">
-            {role === 'lecturer' ? <GraduationCap className="h-8 w-8" /> : <Sparkles className="h-8 w-8" />}
-          </div>
-          <h1 className="text-3xl font-headline font-bold text-secondary">
-            {role === 'lecturer' ? "Lecturer Portal" : "Welcome Back"}
+          <h1 className="text-3xl font-headline font-extrabold text-foreground tracking-tight mb-2">
+            Welcome Back
           </h1>
+          <p className="text-muted-foreground text-sm">
+            Log in to continue learning.
+          </p>
         </div>
 
         {configError && (
@@ -121,79 +132,79 @@ function LoginForm() {
           </Alert>
         )}
 
-        <div className="bg-accent/50 p-4 rounded-2xl mb-6 border border-primary/10 flex items-start gap-3">
-          <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <p className="text-xs font-bold text-secondary">Demo Mode Instructions:</p>
-            <p className="text-[10px] text-muted-foreground leading-tight">
-              1. Click <button onClick={() => router.push('/signup')} className="text-primary font-bold">Sign Up</button> to create your accounts.<br/>
-              2. Recommended emails: <b>lecturer@vani.ai</b> and <b>student@vani.ai</b>.<br/>
-              3. Use any password (e.g., <b>password123</b>).
-            </p>
-            <button onClick={fillDemo} className="text-[10px] text-primary font-bold underline mt-1">Auto-fill Demo Emails</button>
-          </div>
+        <div className="space-y-4 mb-8">
+          <Button variant="outline" className="w-full h-14 text-sm font-semibold text-foreground flex items-center justify-center gap-3">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fillRule="evenodd" clipRule="evenodd" d="M12 24C18.6274 24 24 18.6274 24 12C24 5.37258 18.6274 0 12 0C5.37258 0 0 5.37258 0 12C0 18.6274 5.37258 24 12 24ZM12 16.5C14.4853 16.5 16.5 14.4853 16.5 12C16.5 9.51472 14.4853 7.5 12 7.5C9.51472 7.5 7.5 9.51472 7.5 12C7.5 14.4853 9.51472 16.5 12 16.5ZM12 14C13.1046 14 14 13.1046 14 12C14 10.8954 13.1046 10 12 10C10.8954 10 10 10.8954 10 12C10 13.1046 10.8954 14 12 14Z" fill="currentColor"/>
+            </svg>
+            Continue with Google
+          </Button>
+          <Button variant="outline" className="w-full h-14 text-sm font-semibold text-foreground flex items-center justify-center gap-3">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 24C18.6274 24 24 18.6274 24 12C24 5.37258 18.6274 0 12 0C5.37258 0 0 5.37258 0 12C0 18.6274 5.37258 24 12 24ZM12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="currentColor"/>
+            </svg>
+            Continue with Apple
+          </Button>
         </div>
 
-        <div className="flex bg-muted/50 p-1 rounded-xl mb-8">
-          <button 
-            type="button"
-            onClick={() => setRole('student')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold rounded-lg transition-all ${role === 'student' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
-          >
-            <User className="h-4 w-4" /> Student
-          </button>
-          <button 
-            type="button"
-            onClick={() => setRole('lecturer')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-bold rounded-lg transition-all ${role === 'lecturer' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
-          >
-            <GraduationCap className="h-4 w-4" /> Lecturer
-          </button>
+        <div className="relative mb-8">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-border" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-4 text-muted-foreground font-semibold">OR</span>
+          </div>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-semibold ml-1">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input 
-                  id="email" 
-                  type="email" 
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@college.edu" 
-                  className="h-14 pl-12 rounded-2xl bg-white border-2 focus:border-primary transition-all text-lg" 
-                />
-              </div>
+              <Label htmlFor="email" className="text-xs font-bold text-foreground">Email</Label>
+              <Input 
+                id="email" 
+                type="email" 
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com" 
+                className="h-14 bg-card" 
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="pass" className="text-sm font-semibold ml-1">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="pass" className="text-xs font-bold text-foreground">Password</Label>
+                <button type="button" onClick={fillDemo} className="text-xs text-primary font-semibold">Forgot?</button>
+              </div>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input 
                   id="pass" 
-                  type="password" 
+                  type={showPassword ? "text" : "password"} 
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••" 
-                  className="h-14 pl-12 rounded-2xl bg-white border-2 focus:border-primary transition-all text-lg" 
+                  className="h-14 bg-card pr-12" 
                 />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+                </button>
               </div>
             </div>
           </div>
 
-          <Button type="submit" size="lg" disabled={isLoading} className="w-full h-14 rounded-2xl text-lg font-semibold shadow-xl shadow-primary/20">
-            {isLoading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : `Login as ${role === 'lecturer' ? 'Lecturer' : 'Student'}`}
+          <Button type="submit" size="lg" disabled={isLoading} className="w-full h-14 text-base mt-2">
+            {isLoading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : "Sign In"}
           </Button>
         </form>
       </div>
 
-      <div className="mt-8 text-center pb-6">
-        <p className="text-muted-foreground">
-          New here? <button onClick={() => router.push('/signup')} className="text-primary font-bold">Create Account</button>
+      <div className="mt-auto text-center pb-8 pt-6">
+        <p className="text-muted-foreground text-sm">
+          Don't have an account? <button onClick={() => router.push('/signup')} className="text-primary font-bold">Sign Up</button>
         </p>
       </div>
     </div>

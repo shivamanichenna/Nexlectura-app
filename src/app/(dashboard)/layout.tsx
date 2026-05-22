@@ -18,7 +18,7 @@ export default function DashboardLayout({
   useEffect(() => {
     setMounted(true)
     // Refine role based on local storage only after mounting
-    const savedRole = localStorage.getItem('vani-role')
+    const savedRole = localStorage.getItem('nexlectra-role')
     if (savedRole === 'lecturer' || pathname.includes('/lecturer')) {
       setIsLecturer(true)
     } else {

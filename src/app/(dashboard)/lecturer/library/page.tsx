@@ -1,127 +1,128 @@
+'use client';
 
-"use client"
-
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Plus, Search, BookOpen, FileText, Download, MoreVertical, Sparkles, Folder, UploadCloud, Library } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { FileText, PlaySquare, Clapperboard, Sparkles, Search, Filter, MoreVertical, Menu } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export default function LecturerLibraryPage() {
-  const { toast } = useToast()
-  const [search, setSearch] = useState("")
-  const categories = ["All", "Syllabus", "Handouts", "Reference Books", "Previous Papers"]
-  
-  const documents = [
-    { id: 1, name: "Macroeconomics_Syllabus_2024.pdf", type: "Syllabus", size: "1.2 MB", date: "Aug 12", subject: "Economics" },
-    { id: 2, name: "Unit_1_Case_Studies.pdf", type: "Handouts", size: "4.5 MB", date: "Sep 05", subject: "Economics" },
-    { id: 3, name: "Economics_Reference_Book.pdf", type: "Reference", size: "12.8 MB", date: "Sep 20", subject: "Economics" },
-  ]
-
-  const handleUpload = () => {
-    toast({
-      title: "Syncing with Vani AI",
-      description: "Your document is being indexed as a source of truth for student doubts.",
-    })
-  }
-
   return (
-    <div className="space-y-6 pb-24">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-headline font-bold text-secondary">Knowledge Base</h1>
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Feature 7 & 20 • Content Library</p>
-        </div>
-        <Button onClick={handleUpload} className="rounded-xl h-11 font-bold gap-2 shadow-lg shadow-primary/20">
-          <Plus className="h-4 w-4" /> Upload Resource
-        </Button>
+    <div className="flex flex-col min-h-screen bg-[#fafafa] -mt-6 pb-24">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 pt-6 pb-4 bg-[#fafafa] sticky top-0 z-10">
+        <button className="text-gray-800 hover:opacity-70 transition-opacity">
+          <Menu className="h-6 w-6" />
+        </button>
+        <span className="font-bold text-xl text-[#ff6b2b]">Nexlectra</span>
+        <Avatar className="h-9 w-9 shadow-sm border border-gray-100">
+          <AvatarImage src="https://i.pravatar.cc/150?img=11" />
+          <AvatarFallback>L</AvatarFallback>
+        </Avatar>
       </div>
 
-      {/* AI Knowledge Base Info (Feature 8) */}
-      <Card className="rounded-[2.5rem] bg-secondary text-white border-none p-7 relative overflow-hidden shadow-2xl">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full -mr-16 -mt-16 blur-2xl" />
-        <div className="relative z-10 flex gap-5">
-          <div className="h-14 w-14 bg-white/10 rounded-2xl flex items-center justify-center text-primary shrink-0 shadow-inner">
-            <Sparkles className="h-7 w-7" />
+      <div className="px-4 space-y-6 mt-2">
+        {/* Dropzone */}
+        <div className="border-[2.5px] border-dashed border-[#e2d5c8] rounded-[2rem] bg-white flex flex-col items-center justify-center py-10 px-4 text-center cursor-pointer hover:bg-orange-50/30 transition-colors shadow-sm">
+          <div className="flex items-center gap-3 mb-4 text-[#5c697a]">
+            <FileText className="h-8 w-8 stroke-[1.5px]" />
+            <PlaySquare className="h-8 w-8 stroke-[1.5px]" />
+            <Clapperboard className="h-8 w-8 stroke-[1.5px]" />
           </div>
-          <div className="space-y-2">
-             <h4 className="font-bold text-base leading-tight">AI Learning Core</h4>
-             <p className="text-xs text-white/60 leading-relaxed italic">
-               "Everything you upload here—Syllabus, PDFs, or PPTs—is used by Vani AI as a source of truth to answer student doubts contextually."
-             </p>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Upload Course Material</h2>
+          <p className="text-gray-500 text-sm mb-4">Drag and Drop / Tap to Upload</p>
+          <div className="bg-gray-100/80 px-4 py-1.5 rounded-full text-xs font-medium text-gray-500">
+            Supported formats: PDF, PPT, MP4
           </div>
         </div>
-      </Card>
 
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input 
-          placeholder="Search by topic, file name..." 
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="h-12 pl-12 rounded-2xl bg-muted/40 border-none focus-visible:ring-primary/20" 
-        />
-      </div>
-
-      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-        {categories.map((cat, i) => (
-          <Button key={i} variant={i === 0 ? "default" : "outline"} size="sm" className="rounded-full px-5 h-9 text-[11px] font-bold whitespace-nowrap">
-            {cat}
-          </Button>
-        ))}
-      </div>
-
-      <div className="space-y-3">
-        <h3 className="font-headline font-bold text-lg px-1 flex items-center gap-2">
-          <Library className="h-5 w-5 text-primary" />
-          Recent Uploads
-        </h3>
-        {documents.map((doc) => (
-          <Card key={doc.id} className="rounded-3xl border-none bg-white shadow-sm border-2 border-muted hover:border-primary/20 transition-all group">
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className="h-12 w-12 bg-muted/30 rounded-2xl flex items-center justify-center text-secondary group-hover:scale-105 transition-transform">
-                 <FileText className="h-6 w-6" />
+        {/* Processing State */}
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] p-4 relative overflow-hidden">
+          <div className="flex gap-4">
+            <div className="h-12 w-12 rounded-xl bg-[#e6e9f0] flex items-center justify-center shrink-0">
+              <FileText className="h-6 w-6 text-[#c23b22]" />
+            </div>
+            <div className="flex-1 pt-0.5">
+              <h4 className="font-semibold text-gray-900 text-sm">Lecture_05_Deep_Learning.pdf</h4>
+              <div className="flex items-center gap-1.5 mt-1">
+                <Sparkles className="h-3.5 w-3.5 text-[#ff6b2b]" />
+                <span className="text-xs text-gray-500">Processing into Source of Truth...</span>
               </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="font-bold text-secondary text-sm truncate">{doc.name}</h4>
-                <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-bold mt-1">
-                  <Badge variant="secondary" className="h-4 py-0 px-1.5 text-[8px] uppercase">{doc.type}</Badge>
-                  <span>{doc.size}</span>
-                  <span>•</span>
-                  <span>{doc.date}</span>
-                </div>
-              </div>
-              <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-primary">
-                 <Download className="h-5 w-5" />
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            </div>
+            <div className="font-bold text-[#ff6b2b] text-sm pt-0.5">
+              65%
+            </div>
+          </div>
+          <div className="mt-4 flex h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+            <div className="bg-[#ff6b2b] w-[65%] rounded-full"></div>
+          </div>
+        </div>
 
-      {/* Subject Folders (Feature 20) */}
-      <div className="pt-4 space-y-4">
-         <h3 className="font-headline font-bold text-lg px-1">Subject Archives</h3>
-         <div className="grid grid-cols-2 gap-4">
-            {[
-              { name: "Economics", items: 24, color: "text-orange-500", bg: "bg-orange-50/50" },
-              { name: "Statistics", items: 12, color: "text-blue-500", bg: "bg-blue-50/50" },
-              { name: "Banking", items: 8, color: "text-emerald-500", bg: "bg-emerald-50/50" },
-              { name: "Syllabus", items: 4, color: "text-purple-500", bg: "bg-purple-50/50" },
-            ].map((folder, i) => (
-              <Card key={i} className={`rounded-[2rem] border-none ${folder.bg} p-6 flex flex-col gap-4 cursor-pointer hover:shadow-lg transition-all group`}>
-                <div className={`h-12 w-12 rounded-2xl bg-white flex items-center justify-center ${folder.color} shadow-sm group-hover:rotate-6 transition-transform`}>
-                  <Folder className="h-6 w-6 fill-current" />
-                </div>
-                <div>
-                   <h4 className="font-bold text-secondary text-sm">{folder.name}</h4>
-                   <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-tight">{folder.items} Resources</p>
-                </div>
-              </Card>
-            ))}
-         </div>
+        {/* Your Library Header */}
+        <div className="flex items-center justify-between pt-2">
+          <h2 className="text-2xl font-bold text-gray-900">Your Library</h2>
+          <div className="flex gap-2">
+            <button className="h-10 w-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-600 shadow-sm hover:bg-gray-50">
+              <Search className="h-4 w-4" />
+            </button>
+            <button className="h-10 px-4 rounded-full bg-white border border-gray-200 flex items-center gap-2 text-gray-700 text-sm font-medium shadow-sm hover:bg-gray-50">
+              <Filter className="h-4 w-4" />
+              Filter
+            </button>
+          </div>
+        </div>
+
+        {/* Files List */}
+        <div className="space-y-3">
+          {/* File 1 */}
+          <div className="bg-white rounded-3xl p-4 flex items-center gap-4 shadow-sm border border-gray-50">
+            <div className="h-12 w-12 rounded-xl bg-[#fce8e6] flex items-center justify-center shrink-0">
+              <PlaySquare className="h-6 w-6 text-[#d93025]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold text-gray-900 text-[15px] truncate">Intro_to_NLP.pptx</h4>
+              <p className="text-xs text-gray-500 mt-0.5">12MB • 2 days ago</p>
+            </div>
+            <button className="text-gray-400 hover:text-gray-600 p-2">
+              <MoreVertical className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* File 2 */}
+          <div className="bg-white rounded-3xl p-4 flex items-center gap-4 shadow-sm border border-gray-50">
+            <div className="h-12 w-12 rounded-xl bg-[#fcece3] flex items-center justify-center shrink-0">
+              <FileText className="h-6 w-6 text-[#c25e22]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold text-gray-900 text-[15px] truncate">Transformers_Research.pdf</h4>
+              <p className="text-xs text-gray-500 mt-0.5">4.5MB • 1 week ago</p>
+            </div>
+            <button className="text-gray-400 hover:text-gray-600 p-2">
+              <MoreVertical className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* File 3 */}
+          <div className="bg-white rounded-3xl p-4 flex items-center gap-4 shadow-sm border border-gray-50">
+            <div className="h-12 w-12 rounded-xl bg-[#8c9bab] flex items-center justify-center shrink-0">
+              <Clapperboard className="h-6 w-6 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold text-gray-900 text-[15px] truncate">Seminar_Recording.mp4</h4>
+              <p className="text-xs text-gray-500 mt-0.5">240MB • 2 weeks ago</p>
+            </div>
+            <button className="text-gray-400 hover:text-gray-600 p-2">
+              <MoreVertical className="h-5 w-5" />
+            </button>
+          </div>
+          
+          {/* Skeleton loading item */}
+          <div className="bg-white rounded-3xl p-4 flex items-center gap-4 shadow-sm border border-gray-50 opacity-60">
+            <div className="h-12 w-12 rounded-xl bg-gray-200 animate-pulse shrink-0"></div>
+            <div className="flex-1 min-w-0 space-y-2">
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+              <div className="h-3 bg-gray-200 rounded animate-pulse w-1/3"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

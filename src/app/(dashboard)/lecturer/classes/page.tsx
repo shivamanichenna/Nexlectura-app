@@ -1,144 +1,118 @@
-
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { 
-  Plus, 
-  Search, 
-  Users, 
-  BookOpen, 
-  ChevronRight, 
-  GraduationCap, 
-  CheckCircle,
-  Share2,
-  Copy,
-  LayoutGrid,
-  List
-} from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { Search, Monitor, Briefcase, Palette, Key, Plus } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-export default function ClassManagementPage() {
-  const { toast } = useToast()
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
-  const [classes] = useState([
-    { id: 1, name: "CSE-A", subject: "Operating Systems", year: "3rd Year", semester: "5th Sem", students: 64, code: "VANI-CS2401" },
-    { id: 2, name: "EC-B", subject: "Microprocessors", year: "2nd Year", semester: "3rd Sem", students: 58, code: "VANI-EC1205" },
-    { id: 3, name: "MBA-I", subject: "Org Behavior", year: "1st Year", semester: "1st Sem", students: 42, code: "VANI-MB1011" },
-  ])
+export default function ClassStudentManagement() {
+  const [filter, setFilter] = useState("")
 
-  const copyCode = (code: string) => {
-    navigator.clipboard.writeText(code)
-    toast({
-      title: "Invite Code Copied!",
-      description: `${code} is ready to share with your students.`,
-    })
-  }
+  const classes = [
+    { id: 1, name: "CSE-A", subject: "Advanced Algorithms", icon: Monitor, iconColor: "text-[#b04a11]", iconBg: "bg-[#ffebdb]", code: "NX-8829", students: 42 },
+    { id: 2, name: "MBA-I", subject: "Strategic Management", icon: Briefcase, iconColor: "text-gray-600", iconBg: "bg-[#e8ecf4]", code: "NX-1104", students: 28 },
+    { id: 3, name: "Design 101", subject: "Intro to UX", icon: Palette, iconColor: "text-gray-600", iconBg: "bg-[#e8f0fe]", code: "NX-4492", students: 35 },
+  ]
+
+  const students = [
+    { name: "Alex Chen", score: 92, avatar: "https://i.pravatar.cc/150?u=alex_chen", strokeColor: "stroke-[#ff6b2b]" },
+    { name: "Sarah Jenkins", score: 85, avatar: "https://i.pravatar.cc/150?u=sarah_jenkins", strokeColor: "stroke-[#8b4513]" },
+    { name: "Marcus Cole", score: 65, avatar: "https://i.pravatar.cc/150?u=marcus_cole", strokeColor: "stroke-[#778da9]" },
+    { name: "Elena Rossi", score: 98, avatar: "https://i.pravatar.cc/150?u=elena_rossi", strokeColor: "stroke-[#ff6b2b]" },
+  ]
 
   return (
-    <div className="space-y-6 pb-24">
-      {/* Header (Feature 3) */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-headline font-bold text-secondary">Class Management</h1>
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-tight mt-0.5">Manage sections & semesters</p>
-        </div>
-        <Button className="rounded-xl h-11 font-bold gap-2 shadow-lg shadow-primary/20">
-          <Plus className="h-4 w-4" /> Create Class
-        </Button>
+    <div className="flex flex-col min-h-screen bg-[#fafafa] font-sans pb-24 px-6 pt-6 relative">
+      
+      {/* Top App Bar */}
+      <div className="flex items-center justify-between mb-8">
+        <Avatar className="h-10 w-10 border shadow-sm">
+          <AvatarImage src="https://i.pravatar.cc/150?u=dr_sarah" alt="Profile" />
+          <AvatarFallback>DR</AvatarFallback>
+        </Avatar>
+        <span className="font-bold text-lg text-[#b04a11]">Professor Portal</span>
+        <button className="text-gray-900 hover:opacity-70 transition-opacity">
+          <Search className="h-6 w-6" />
+        </button>
       </div>
 
-      {/* Controls */}
-      <div className="flex gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search sections, subjects..." className="h-12 pl-12 rounded-2xl bg-muted/40 border-none focus-visible:ring-primary/20" />
-        </div>
-        <div className="flex bg-muted/40 p-1 rounded-2xl">
-          <button 
-            onClick={() => setViewMode('list')}
-            className={`p-2.5 rounded-xl transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
-          >
-            <List className="h-4 w-4" />
-          </button>
-          <button 
-            onClick={() => setViewMode('grid')}
-            className={`p-2.5 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-primary' : 'text-muted-foreground'}`}
-          >
-            <LayoutGrid className="h-4 w-4" />
-          </button>
-        </div>
+      {/* Filter Input */}
+      <div className="flex items-center bg-white border border-gray-200 rounded-[1.25rem] px-4 h-14 mb-8 shadow-sm">
+        <Search className="h-5 w-5 text-gray-400 mr-3" />
+        <input 
+          type="text" 
+          placeholder="Filter classes and students..." 
+          className="bg-transparent border-none outline-none text-gray-600 text-[15px] placeholder:text-gray-400 flex-1"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        />
       </div>
 
-      {/* Classroom List (Feature 3) */}
-      <div className={viewMode === 'grid' ? 'grid grid-cols-2 gap-4' : 'space-y-4'}>
-        {classes.map((cls) => (
-          <Card key={cls.id} className="rounded-3xl border-2 border-muted hover:border-primary/20 transition-all cursor-pointer group bg-white shadow-sm overflow-hidden">
-            <CardContent className={`p-5 flex ${viewMode === 'grid' ? 'flex-col gap-4' : 'items-center gap-4'}`}>
-              <div className={`rounded-2xl flex items-center justify-center text-primary group-hover:scale-105 transition-transform ${viewMode === 'grid' ? 'h-14 w-14 bg-primary/10' : 'h-16 w-16 bg-muted/30'}`}>
-                <GraduationCap className={viewMode === 'grid' ? 'h-7 w-7' : 'h-8 w-8'} />
-              </div>
-              
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-bold text-secondary text-base truncate">{cls.name}</h4>
-                  <Badge variant="secondary" className="text-[8px] h-4 py-0 font-bold uppercase tracking-tighter">{cls.semester}</Badge>
+      {/* Active Classes */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-[19px] font-bold text-gray-900">Active Classes</h2>
+          <button className="text-[#ff6b2b] text-[13px] font-bold tracking-wide">View All</button>
+        </div>
+        
+        <div className="space-y-4">
+          {classes.map((cls) => (
+            <div key={cls.id} className="bg-white rounded-[2rem] p-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 flex items-center justify-between hover:border-[#ff6b2b]/30 transition-all cursor-pointer">
+              <div className="flex items-center gap-4">
+                <div className={`h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 ${cls.iconBg}`}>
+                  <cls.icon className={`h-6 w-6 ${cls.iconColor}`} />
                 </div>
-                <p className="text-xs font-bold text-primary uppercase tracking-tight line-clamp-1">{cls.subject}</p>
-                <div className="flex items-center gap-3 mt-3 text-[10px] text-muted-foreground font-bold">
-                  <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {cls.students} Students</span>
-                  <span className="hidden sm:inline">•</span>
-                  <span>{cls.year}</span>
+                <div>
+                  <h3 className="font-bold text-[17px] text-gray-900">{cls.name}</h3>
+                  <p className="text-[14px] text-gray-500">{cls.subject}</p>
                 </div>
               </div>
-
-              <div className={`flex gap-2 ${viewMode === 'grid' ? 'w-full' : 'shrink-0'}`}>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={(e) => { e.stopPropagation(); copyCode(cls.code); }}
-                  className="rounded-xl h-10 w-10 border-muted-foreground/20 text-muted-foreground hover:text-primary hover:border-primary/40"
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-                {viewMode === 'list' && <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />}
+              <div className="flex flex-col items-end gap-1.5">
+                <div className="bg-[#ff6b2b] text-white text-[11px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
+                  <Key className="h-3 w-3" /> {cls.code}
+                </div>
+                <span className="text-[12px] text-gray-500 font-medium">{cls.students} Students</span>
               </div>
-            </CardContent>
-          </Card>
-        ))}
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Classroom Invitations Info (Feature 3) */}
-      <Card className="rounded-[2.5rem] bg-secondary text-white border-none p-8 relative overflow-hidden shadow-2xl">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full -mr-16 -mt-16 blur-2xl" />
-        <div className="relative z-10 space-y-6">
-          <div className="flex items-center gap-3">
-             <div className="h-10 w-10 bg-white/10 rounded-xl flex items-center justify-center text-primary">
-               <Share2 className="h-5 w-5" />
-             </div>
-             <div className="space-y-0.5">
-               <h4 className="font-bold text-base leading-none">Global Classroom Invitations</h4>
-               <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Enroll your students easily</p>
-             </div>
-          </div>
-          
-          <p className="text-xs text-white/70 leading-relaxed italic">
-            "Share your secure Vani Codes with students to automatically enroll them. Each code is unique to the section and subject combination."
-          </p>
-          
-          <div className="flex gap-3 pt-2">
-            <Button variant="outline" className="flex-1 rounded-xl h-12 text-xs font-bold bg-white/5 border-white/10 text-white hover:bg-white/20 transition-all">
-              <Plus className="h-3.5 w-3.5 mr-2" /> Bulk Enroll
-            </Button>
-            <Button variant="outline" className="flex-1 rounded-xl h-12 text-xs font-bold bg-white/5 border-white/10 text-white hover:bg-white/20 transition-all">
-              <Share2 className="h-3.5 w-3.5 mr-2" /> Share QR
-            </Button>
-          </div>
+      {/* Top Students Engagement */}
+      <div>
+        <h2 className="text-[19px] font-bold text-gray-900 mb-4">Top Students Engagement</h2>
+        <div className="grid grid-cols-2 gap-4">
+          {students.map((student, idx) => {
+            const radius = 30
+            const circumference = 2 * Math.PI * radius
+            const strokeDashoffset = circumference - (student.score / 100) * circumference
+
+            return (
+              <div key={idx} className="bg-white rounded-[2rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 flex flex-col items-center justify-center text-center">
+                <div className="relative w-[76px] h-[76px] mb-3">
+                   {/* Avatar */}
+                   <Avatar className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 border-2 border-white shadow-sm z-10">
+                     <AvatarImage src={student.avatar} alt={student.name} className="object-cover" />
+                     <AvatarFallback>{student.name.charAt(0)}</AvatarFallback>
+                   </Avatar>
+                   {/* Circular Progress Ring */}
+                   <svg className="w-full h-full -rotate-90 relative z-0">
+                     <circle cx="38" cy="38" r="30" fill="transparent" stroke="#f3f4f6" strokeWidth="6" />
+                     <circle cx="38" cy="38" r="30" fill="transparent" className={student.strokeColor} strokeWidth="6" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} strokeLinecap="round" />
+                   </svg>
+                </div>
+                <p className="text-[20px] font-bold text-gray-900 mb-0.5">{student.score}%</p>
+                <p className="text-[13px] text-gray-500 font-medium">{student.name}</p>
+              </div>
+            )
+          })}
         </div>
-      </Card>
+      </div>
+
+      {/* FAB */}
+      <button className="fixed bottom-24 right-6 w-16 h-16 bg-[#ff6b2b] rounded-full flex items-center justify-center text-white shadow-lg shadow-[#ff6b2b]/30 hover:bg-[#e65c20] transition-colors z-50">
+        <Plus className="h-8 w-8" />
+      </button>
+
     </div>
   )
 }

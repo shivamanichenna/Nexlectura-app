@@ -5,7 +5,7 @@ import { FirebaseClientProvider } from '@/firebase';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'Vani AI - Your AI Classroom Companion',
+  title: 'Nexlectra - Your AI Classroom Companion',
   description: 'Recreating the classroom experience with AI-powered bilingual learning.',
 };
 
