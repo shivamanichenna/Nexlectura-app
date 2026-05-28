@@ -65,16 +65,33 @@ export default function AIDoubtAssistant() {
     return lectures?.find(l => l.id === selectedLectureId);
   }, [lectures, selectedLectureId]);
 
+  // Fetch Chat History
+  const messagesQuery = useMemo(() => {
+    if (!db || !user) return null;
+    return query(collection(db, 'students', user.uid, 'messages'), orderBy('timestamp', 'asc'));
+  }, [db, user]);
+
+  const { data: firestoreMessages } = useCollection(messagesQuery);
+
   useEffect(() => {
-    setMessages([
-      {
-        id: '1',
-        text: `Hello! I'm your Nexlectra AI Tutor. We were discussing advanced closure patterns in JavaScript last time. Would you like to continue, or explore something new today?`,
-        sender: 'ai',
-        timestamp: new Date()
-      }
-    ])
-  }, [profile])
+    if (firestoreMessages && firestoreMessages.length > 0) {
+      setMessages(firestoreMessages.map((m: any) => ({
+        id: m.id,
+        text: m.text,
+        sender: m.sender,
+        timestamp: m.timestamp?.toDate ? m.timestamp.toDate() : new Date()
+      })))
+    } else if (firestoreMessages?.length === 0 && messages.length === 0) {
+      setMessages([
+        {
+          id: '1',
+          text: `Hello! I'm your Nexlectra AI Tutor. Would you like to explore something new today?`,
+          sender: 'ai',
+          timestamp: new Date()
+        }
+      ])
+    }
+  }, [firestoreMessages])
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -88,39 +105,56 @@ export default function AIDoubtAssistant() {
   const handleSend = async () => {
     if (!input.trim()) return
     
-    const userMsg: Message = {
-      id: Date.now().toString(),
-      text: input,
-      sender: 'user',
-      timestamp: new Date()
-    }
-    
-    setMessages(prev => [...prev, userMsg])
+    const userMsgText = input;
     setInput("")
     setIsTyping(true)
+    
+    // Optimistic UI Update
+    setMessages(prev => [...prev, {
+      id: Date.now().toString(),
+      text: userMsgText,
+      sender: 'user',
+      timestamp: new Date()
+    }])
 
     try {
+      // Save to Firestore
+      if (db && user) {
+        const { addDoc, serverTimestamp } = await import('firebase/firestore');
+        await addDoc(collection(db, 'students', user.uid, 'messages'), {
+          text: userMsgText,
+          sender: 'user',
+          timestamp: serverTimestamp()
+        })
+      }
+
       const contextContent = selectedLecture?.transcript || selectedLecture?.title || "General classroom context.";
       
       const response = await aiDoubtAssistant({
-        question: input,
+        question: userMsgText,
         lectureContent: contextContent,
-        userLearningStyle: 'mixed',
-        preferredLanguage: 'English',
-        chatHistory: messages.slice(-5).map(m => `${m.sender === 'user' ? 'User' : 'AI'}: ${m.text}`)
+        userLearningStyle: profile?.learningStyle || 'mixed',
+        preferredLanguage: profile?.preferredLanguage || 'English',
+        chatHistory: messages.slice(-10).map(m => `${m.sender === 'user' ? 'User' : 'AI'}: ${m.text}`)
       })
 
-      const aiMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        text: response.answer,
-        sender: 'ai',
-        timestamp: new Date()
+      // Save AI Response to Firestore
+      if (db && user) {
+        const { addDoc, serverTimestamp } = await import('firebase/firestore');
+        await addDoc(collection(db, 'students', user.uid, 'messages'), {
+          text: response.answer,
+          sender: 'ai',
+          timestamp: serverTimestamp()
+        })
+      } else {
+        setMessages(prev => [...prev, {
+          id: (Date.now() + 1).toString(),
+          text: response.answer,
+          sender: 'ai',
+          timestamp: new Date()
+        }])
       }
-      setMessages(prev => [...prev, aiMsg])
 
-      if (response.suggestedFollowUpQuestions?.length) {
-        // Option to display suggestions in UI later
-      }
     } catch (error) {
       console.error(error)
       toast({
