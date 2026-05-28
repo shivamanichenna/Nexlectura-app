@@ -1,10 +1,29 @@
 'use client';
 
-import { FileText, PlaySquare, Clapperboard, Sparkles, Search, Filter, MoreVertical, Menu } from "lucide-react"
+import { FileText, PlaySquare, Clapperboard, Sparkles, Search, Filter, MoreVertical, Menu, Loader2 } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useFirestore, useUser, useCollection } from '@/firebase'
+import { collection, query, where, orderBy } from 'firebase/firestore'
+import { useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function LecturerLibraryPage() {
+  const { user } = useUser()
+  const db = useFirestore()
+  const router = useRouter()
+
+  const lecturesQuery = useMemo(() => {
+    if (!db || !user) return null
+    return query(
+      collection(db, 'lectures'),
+      where('lecturerId', '==', user.uid)
+      // Note: omit orderBy('createdAt', 'desc') to avoid needing a composite index for now
+    )
+  }, [db, user])
+
+  const { data: lectures, loading } = useCollection(lecturesQuery)
+
   return (
     <div className="flex flex-col min-h-screen bg-[#fafafa] -mt-6 pb-24">
       {/* Header */}
@@ -14,14 +33,17 @@ export default function LecturerLibraryPage() {
         </button>
         <span className="font-bold text-xl text-[#ff6b2b]">Nexlectra</span>
         <Avatar className="h-9 w-9 shadow-sm border border-gray-100">
-          <AvatarImage src="https://i.pravatar.cc/150?img=11" />
+          <AvatarImage src={`https://i.pravatar.cc/150?u=${user?.uid || '11'}`} />
           <AvatarFallback>L</AvatarFallback>
         </Avatar>
       </div>
 
       <div className="px-4 space-y-6 mt-2">
         {/* Dropzone */}
-        <div className="border-[2.5px] border-dashed border-[#e2d5c8] rounded-[2rem] bg-white flex flex-col items-center justify-center py-10 px-4 text-center cursor-pointer hover:bg-orange-50/30 transition-colors shadow-sm">
+        <div 
+          onClick={() => router.push('/lecturer/upload')}
+          className="border-[2.5px] border-dashed border-[#e2d5c8] rounded-[2rem] bg-white flex flex-col items-center justify-center py-10 px-4 text-center cursor-pointer hover:bg-orange-50/30 transition-colors shadow-sm"
+        >
           <div className="flex items-center gap-3 mb-4 text-[#5c697a]">
             <FileText className="h-8 w-8 stroke-[1.5px]" />
             <PlaySquare className="h-8 w-8 stroke-[1.5px]" />
@@ -72,56 +94,30 @@ export default function LecturerLibraryPage() {
 
         {/* Files List */}
         <div className="space-y-3">
-          {/* File 1 */}
-          <div className="bg-white rounded-3xl p-4 flex items-center gap-4 shadow-sm border border-gray-50">
-            <div className="h-12 w-12 rounded-xl bg-[#fce8e6] flex items-center justify-center shrink-0">
-              <PlaySquare className="h-6 w-6 text-[#d93025]" />
+          {loading ? (
+            <div className="flex justify-center py-10">
+              <Loader2 className="h-8 w-8 animate-spin text-[#ff6b2b]" />
             </div>
-            <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-gray-900 text-[15px] truncate">Intro_to_NLP.pptx</h4>
-              <p className="text-xs text-gray-500 mt-0.5">12MB • 2 days ago</p>
+          ) : lectures && lectures.length > 0 ? (
+            lectures.map((lecture: any) => (
+              <div key={lecture.id} className="bg-white rounded-3xl p-4 flex items-center gap-4 shadow-sm border border-gray-50">
+                <div className={`h-12 w-12 rounded-xl flex items-center justify-center shrink-0 ${lecture.status === 'completed' ? 'bg-[#eefcf2] text-green-600' : 'bg-[#fce8e6] text-[#d93025]'}`}>
+                  {lecture.status === 'completed' ? <Sparkles className="h-6 w-6" /> : <PlaySquare className="h-6 w-6" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-gray-900 text-[15px] truncate">{lecture.title}</h4>
+                  <p className="text-xs text-gray-500 mt-0.5">{lecture.subject} • {lecture.status}</p>
+                </div>
+                <button className="text-gray-400 hover:text-gray-600 p-2">
+                  <MoreVertical className="h-5 w-5" />
+                </button>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-10 text-gray-500 font-medium">
+              No course materials uploaded yet.
             </div>
-            <button className="text-gray-400 hover:text-gray-600 p-2">
-              <MoreVertical className="h-5 w-5" />
-            </button>
-          </div>
-
-          {/* File 2 */}
-          <div className="bg-white rounded-3xl p-4 flex items-center gap-4 shadow-sm border border-gray-50">
-            <div className="h-12 w-12 rounded-xl bg-[#fcece3] flex items-center justify-center shrink-0">
-              <FileText className="h-6 w-6 text-[#c25e22]" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-gray-900 text-[15px] truncate">Transformers_Research.pdf</h4>
-              <p className="text-xs text-gray-500 mt-0.5">4.5MB • 1 week ago</p>
-            </div>
-            <button className="text-gray-400 hover:text-gray-600 p-2">
-              <MoreVertical className="h-5 w-5" />
-            </button>
-          </div>
-
-          {/* File 3 */}
-          <div className="bg-white rounded-3xl p-4 flex items-center gap-4 shadow-sm border border-gray-50">
-            <div className="h-12 w-12 rounded-xl bg-[#8c9bab] flex items-center justify-center shrink-0">
-              <Clapperboard className="h-6 w-6 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-gray-900 text-[15px] truncate">Seminar_Recording.mp4</h4>
-              <p className="text-xs text-gray-500 mt-0.5">240MB • 2 weeks ago</p>
-            </div>
-            <button className="text-gray-400 hover:text-gray-600 p-2">
-              <MoreVertical className="h-5 w-5" />
-            </button>
-          </div>
-          
-          {/* Skeleton loading item */}
-          <div className="bg-white rounded-3xl p-4 flex items-center gap-4 shadow-sm border border-gray-50 opacity-60">
-            <div className="h-12 w-12 rounded-xl bg-gray-200 animate-pulse shrink-0"></div>
-            <div className="flex-1 min-w-0 space-y-2">
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
-              <div className="h-3 bg-gray-200 rounded animate-pulse w-1/3"></div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
