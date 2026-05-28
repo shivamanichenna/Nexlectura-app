@@ -22,6 +22,8 @@ import { errorEmitter } from '@/firebase/error-emitter'
 import { FirestorePermissionError } from '@/firebase/errors'
 import { useToast } from "@/hooks/use-toast"
 import { Progress } from "@/components/ui/progress"
+import { generateTranscriptionFromBlob } from '@/ai/gemini-client'
+import { processLectureAction } from '@/app/actions/process-lecture'
 
 export default function UploadLecturePage() {
   const router = useRouter()
@@ -33,6 +35,7 @@ export default function UploadLecturePage() {
 
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [processingPhase, setProcessingPhase] = useState<'uploading' | 'transcribing' | 'summarizing' | null>(null)
   const [file, setFile] = useState<File | null>(null)
   
   const [title, setTitle] = useState("")
@@ -67,6 +70,7 @@ export default function UploadLecturePage() {
 
     setIsUploading(true)
     setUploadProgress(0)
+    setProcessingPhase('uploading')
 
     try {
       // 1. Fetch lecturer name
@@ -77,66 +81,84 @@ export default function UploadLecturePage() {
       const storageRef = ref(storage, `lectures/${user.uid}/${Date.now()}_${file.name}`)
       const uploadTask = uploadBytesResumable(storageRef, file)
 
-      uploadTask.on('state_changed', 
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-          setUploadProgress(progress)
-        }, 
-        (error) => {
-          console.error("Storage upload error:", error)
-          setIsUploading(false)
-          toast({
-            variant: "destructive",
-            title: "Upload failed",
-            description: error.message,
-          })
-        }, 
-        () => {
-          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-            // 3. Save metadata to Firestore
-            const lectureData = {
-              title,
-              subject,
-              semester,
-              section,
-              audioUrl: downloadURL,
-              lecturerId: user.uid,
-              lecturerName: lecturerName,
-              createdAt: serverTimestamp(),
-              status: 'processing'
-            }
+      const downloadURL = await new Promise<string>((resolve, reject) => {
+        uploadTask.on('state_changed', 
+          (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+            setUploadProgress(progress)
+          }, 
+          reject, 
+          async () => {
+            const url = await getDownloadURL(uploadTask.snapshot.ref)
+            resolve(url)
+          }
+        )
+      })
 
-            const lecturesRef = collection(db, 'lectures')
-            addDoc(lecturesRef, lectureData)
-              .then(() => {
-                toast({
-                  title: "Lecture Uploaded!",
-                  description: "Your lecture is being processed by Nexlectra.",
-                })
-                router.push('/lecturer')
-              })
-              .catch((err) => {
-                const permissionError = new FirestorePermissionError({
-                  path: 'lectures',
-                  operation: 'create',
-                  requestResourceData: lectureData
-                })
-                errorEmitter.emit('permission-error', permissionError)
-              })
-              .finally(() => {
-                setIsUploading(false)
-              })
-          })
-        }
-      )
+      // 3. Save initial metadata to Firestore (so we don't lose it)
+      const lectureData: any = {
+        title,
+        subject,
+        semester,
+        section,
+        audioUrl: downloadURL,
+        lecturerId: user.uid,
+        lecturerName: lecturerName,
+        createdAt: serverTimestamp(),
+        status: 'processing'
+      }
+
+      const lecturesRef = collection(db, 'lectures')
+      const docRef = await addDoc(lecturesRef, lectureData).catch((err) => {
+        const permissionError = new FirestorePermissionError({
+          path: 'lectures',
+          operation: 'create',
+          requestResourceData: lectureData
+        })
+        errorEmitter.emit('permission-error', permissionError)
+        throw err
+      })
+
+      // 4. Transcribe in the browser
+      setProcessingPhase('transcribing')
+      const prompt = `Transcribe this lecture verbatim. Clean up 'um's and 'ah's but keep all academic content. Format in clear paragraphs. The lecture is titled "${title}" about "${subject}".`
+      const transcript = await generateTranscriptionFromBlob(file, prompt)
+
+      // 5. Generate Summaries using Server Actions
+      setProcessingPhase('summarizing')
+      const result = await processLectureAction(transcript)
+      
+      if (!result.success || !result.data) {
+        throw new Error(result.error || "Failed to generate AI summaries")
+      }
+
+      // 6. Update Firestore document with AI data
+      const { updateDoc } = await import("firebase/firestore")
+      await updateDoc(docRef, {
+        status: 'completed',
+        transcript: transcript,
+        revisionNotes: result.data.notesData.revisionNotes,
+        keyPoints: result.data.notesData.keyPoints,
+        examSummary: result.data.notesData.examSummary,
+        flashcards: result.data.flashcards
+      })
+
+      toast({
+        title: "Lecture Fully Processed!",
+        description: "AI Transcription, notes, and flashcards have been successfully generated.",
+      })
+      router.push('/lecturer')
+
     } catch (error: any) {
       console.error("Upload process error:", error)
-      setIsUploading(false)
       toast({
         variant: "destructive",
         title: "Something went wrong",
-        description: error.message,
+        description: error.message || "An error occurred during AI processing.",
       })
+    } finally {
+      setIsUploading(false)
+      setProcessingPhase(null)
     }
   }
 
@@ -231,10 +253,18 @@ export default function UploadLecturePage() {
         {isUploading && (
           <div className="space-y-2 px-2">
             <div className="flex justify-between text-xs font-bold text-primary">
-              <span>Uploading...</span>
-              <span>{Math.round(uploadProgress)}%</span>
+              <span>
+                {processingPhase === 'uploading' && 'Uploading...'}
+                {processingPhase === 'transcribing' && 'AI is Transcribing (This may take a minute)...'}
+                {processingPhase === 'summarizing' && 'Generating Notes & Flashcards...'}
+              </span>
+              {processingPhase === 'uploading' && <span>{Math.round(uploadProgress)}%</span>}
             </div>
-            <Progress value={uploadProgress} className="h-2" />
+            {processingPhase === 'uploading' ? (
+              <Progress value={uploadProgress} className="h-2" />
+            ) : (
+              <Progress value={100} className="h-2 animate-pulse" />
+            )}
           </div>
         )}
 
@@ -247,12 +277,12 @@ export default function UploadLecturePage() {
           {isUploading ? (
             <>
               <Loader2 className="h-5 w-5 animate-spin mr-2" />
-              Uploading Lecture...
+              Processing Lecture...
             </>
           ) : (
             <>
               <Upload className="h-5 w-5 mr-2" />
-              Start AI Processing
+              Upload & Process with AI
             </>
           )}
         </Button>

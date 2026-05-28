@@ -21,6 +21,9 @@ import {
 import { generateDynamicQuiz, type GenerateDynamicQuizOutput } from "@/ai/flows/dynamic-ai-quizzes"
 import { useToast } from "@/hooks/use-toast"
 import { Progress } from "@/components/ui/progress"
+import { useFirestore, useCollection } from '@/firebase'
+import { collection, query, where } from 'firebase/firestore'
+import { useMemo } from 'react'
 
 export default function AssessmentsPage() {
   const { toast } = useToast()
@@ -32,7 +35,16 @@ export default function AssessmentsPage() {
   const [isFinished, setIsFinished] = useState(false)
   const [showExplanation, setShowExplanation] = useState(false)
 
-  const handleGenerateQuiz = async () => {
+  const db = useFirestore()
+
+  const lecturesQuery = useMemo(() => {
+    if (!db) return null
+    return query(collection(db, 'lectures'), where('status', '==', 'completed'))
+  }, [db])
+
+  const { data: lectures, loading } = useCollection(lecturesQuery)
+
+  const handleGenerateQuiz = async (lectureTitle?: string, lectureSubject?: string) => {
     setIsGenerating(true)
     setQuizQuestions(null)
     setIsFinished(false)
@@ -40,16 +52,18 @@ export default function AssessmentsPage() {
     setScore(0)
     
     try {
+      const topic = lectureTitle && lectureSubject ? `${lectureTitle} (${lectureSubject})` : "General Academic Review"
+      
       const questions = await generateDynamicQuiz({
-        weakTopics: ["Macro-Dynamics", "Inflation calculations"],
-        conceptsToCover: ["CPI vs WPI", "Demand-pull inflation"],
+        weakTopics: [topic],
+        conceptsToCover: ["Core Concepts", "Advanced theory"],
         numberOfQuestions: 5,
         language: "English"
       })
       setQuizQuestions(questions)
       toast({
         title: "Quiz Ready!",
-        description: "Nexlectra has prepared 5 questions tailored to your progress.",
+        description: `Nexlectra has prepared 5 questions on ${topic}.`,
       })
     } catch (error) {
       console.error(error)
@@ -124,53 +138,60 @@ export default function AssessmentsPage() {
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={handleGenerateQuiz}
+                onClick={() => handleGenerateQuiz()}
                 disabled={isGenerating}
                 className="text-[#b04a11] border-[#b04a11] hover:bg-[#ffebdb] hover:text-[#b04a11] rounded-xl font-bold gap-2"
               >
                 {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                Generate New
+                Surprise Me
               </Button>
-            </div>
-            <div className="p-8 text-center border-2 border-dashed border-gray-200 rounded-3xl bg-white shadow-sm flex flex-col items-center">
-               <div className="h-14 w-14 rounded-full bg-[#ffebdb] flex items-center justify-center text-[#b04a11] mb-3">
-                 <Sparkles className="h-6 w-6" />
-               </div>
-               <p className="text-sm font-medium text-gray-500">Get a personalized AI test based on your weak topics.</p>
             </div>
           </div>
 
           <div className="space-y-4 pt-2">
-            <h3 className="font-bold text-xl text-gray-900">Official Mock Tests</h3>
+            <h3 className="font-bold text-xl text-gray-900">Available AI Assessments</h3>
             <div className="space-y-3">
-              {[
-                { title: "Macroeconomics Mid-Term", subject: "Economics", questions: 30, time: "45 min", type: "Weekly Mock" },
-                { title: "Introduction to Calculus", subject: "Mathematics", questions: 20, time: "30 min", type: "Practice" },
-              ].map((test, idx) => (
-                <Card key={idx} className="rounded-[2rem] border border-gray-100 bg-white shadow-sm overflow-hidden hover:border-[#b04a11]/20 transition-all group">
-                  <CardContent className="p-0">
-                    <div className="p-4 flex items-center gap-4">
-                      <div className="h-14 w-14 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-600 group-hover:bg-[#ffebdb] group-hover:text-[#b04a11] transition-colors">
-                        <ClipboardCheck className="h-7 w-7" />
-                      </div>
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center gap-2">
-                           <h4 className="font-bold text-gray-900 text-[15px]">{test.title}</h4>
-                           <Badge variant="secondary" className="text-[10px] py-0 px-1.5 h-4 uppercase bg-gray-100 text-gray-600">{test.type}</Badge>
+              {loading ? (
+                <div className="flex justify-center py-10">
+                  <Loader2 className="h-8 w-8 animate-spin text-[#b04a11]" />
+                </div>
+              ) : lectures && lectures.length > 0 ? (
+                lectures.map((lecture: any) => (
+                  <Card key={lecture.id} className="rounded-[2rem] border border-gray-100 bg-white shadow-sm overflow-hidden hover:border-[#b04a11]/20 transition-all group">
+                    <CardContent className="p-0">
+                      <div className="p-4 flex items-center gap-4">
+                        <div className="h-14 w-14 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-600 group-hover:bg-[#ffebdb] group-hover:text-[#b04a11] transition-colors">
+                          <ClipboardCheck className="h-7 w-7" />
                         </div>
-                        <div className="flex items-center gap-3 text-xs font-medium text-gray-500">
-                          <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {test.time}</span>
-                          <span>•</span>
-                          <span>{test.questions} Questions</span>
+                        <div className="flex-1 space-y-1">
+                          <div className="flex items-center gap-2">
+                             <h4 className="font-bold text-gray-900 text-[15px]">{lecture.title}</h4>
+                             <Badge variant="secondary" className="text-[10px] py-0 px-1.5 h-4 uppercase bg-gray-100 text-gray-600">{lecture.subject}</Badge>
+                          </div>
+                          <div className="flex items-center gap-3 text-xs font-medium text-gray-500">
+                            <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> 5 Questions</span>
+                            <span>•</span>
+                            <span>AI Generated</span>
+                          </div>
                         </div>
+                        <Button 
+                          onClick={() => handleGenerateQuiz(lecture.title, lecture.subject)} 
+                          disabled={isGenerating}
+                          variant="ghost" 
+                          size="icon" 
+                          className="rounded-full text-[#b04a11] hover:bg-[#ffebdb] transition-colors"
+                        >
+                          <ChevronRight className="h-5 w-5" />
+                        </Button>
                       </div>
-                      <Button variant="ghost" size="icon" className="rounded-full text-gray-400 group-hover:bg-[#ffebdb] group-hover:text-[#b04a11] transition-colors">
-                        <ChevronRight className="h-5 w-5" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <div className="text-center py-10 text-gray-500 font-medium border-2 border-dashed border-gray-200 rounded-3xl">
+                  No lectures available for testing yet.
+                </div>
+              )}
             </div>
           </div>
 

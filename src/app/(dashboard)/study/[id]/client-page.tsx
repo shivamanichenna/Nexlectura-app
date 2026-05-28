@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
-import { 
+import {
   Play, 
   Pause, 
   ChevronLeft,
@@ -13,13 +13,17 @@ import {
   MoreVertical,
   ListVideo,
   FastForward,
-  Rewind
+  Rewind,
+  CheckCircle2,
+  AlertCircle
 } from "lucide-react"
 import { useRouter, useParams, usePathname } from "next/navigation"
 import { useFirestore, useDoc, useUser } from '@/firebase'
 import { doc, updateDoc } from 'firebase/firestore'
 import { generateLectureBilingualSubtitles, type LectureBilingualSubtitlesOutput } from "@/ai/flows/lecture-bilingual-subtitles"
 import { useToast } from "@/hooks/use-toast"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 export default function LecturePlayerClient() {
   const router = useRouter()
@@ -230,10 +234,78 @@ export default function LecturePlayerClient() {
 
       {/* Floating Action Button (AI Notes) */}
       <div className="fixed bottom-6 right-6 z-50">
-        <Button className="h-14 rounded-full px-6 shadow-xl shadow-primary/30 flex items-center gap-2 font-bold text-base hover:scale-105 transition-transform">
-          <Sparkles className="h-5 w-5 fill-current" />
-          AI Notes
-        </Button>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button className="h-14 rounded-full px-6 shadow-xl shadow-primary/30 flex items-center gap-2 font-bold text-base hover:scale-105 transition-transform">
+              <Sparkles className="h-5 w-5 fill-current" />
+              AI Notes
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[80vh] rounded-t-[2rem] p-0 flex flex-col bg-[#fafafa]">
+            <SheetHeader className="p-6 pb-2 shrink-0">
+              <SheetTitle className="font-headline text-2xl flex items-center gap-2">
+                <Sparkles className="h-6 w-6 text-[#ff6b2b]" />
+                Nexlectra AI Notes
+              </SheetTitle>
+            </SheetHeader>
+            <ScrollArea className="flex-1 px-6 pb-6">
+              <div className="space-y-8 mt-4">
+                
+                {lecture.examSummary && (
+                  <div className="bg-[#ffebdb] text-[#b84e14] p-5 rounded-2xl border border-[#ffdfc4] shadow-sm">
+                    <h4 className="font-bold mb-2 uppercase tracking-widest text-xs flex items-center gap-1.5">
+                      <AlertCircle className="h-4 w-4" /> Exam Focus
+                    </h4>
+                    <p className="text-sm font-medium leading-relaxed">{lecture.examSummary}</p>
+                  </div>
+                )}
+
+                {lecture.keyPoints && lecture.keyPoints.length > 0 && (
+                  <div>
+                    <h4 className="font-bold text-lg mb-3">Key Takeaways</h4>
+                    <ul className="space-y-3">
+                      {lecture.keyPoints.map((kp: string, idx: number) => (
+                        <li key={idx} className="flex gap-3 text-sm text-gray-700 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                          <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
+                          <span className="leading-relaxed">{kp}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {lecture.revisionNotes && (
+                  <div>
+                    <h4 className="font-bold text-lg mb-3">Detailed Revision Notes</h4>
+                    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 prose prose-sm max-w-none text-gray-700">
+                      {/* Using pre-wrap since we don't have a markdown renderer readily imported */}
+                      <div className="whitespace-pre-wrap font-medium leading-relaxed">{lecture.revisionNotes}</div>
+                    </div>
+                  </div>
+                )}
+
+                {lecture.flashcards && lecture.flashcards.length > 0 && (
+                  <div>
+                    <h4 className="font-bold text-lg mb-3">Flashcards</h4>
+                    <div className="grid grid-cols-1 gap-4">
+                      {lecture.flashcards.map((card: any, idx: number) => (
+                        <div key={idx} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm group perspective-1000">
+                           <div className="p-4 bg-gray-50 border-b border-gray-100">
+                             <p className="font-bold text-sm text-gray-900">{card.question}</p>
+                           </div>
+                           <div className="p-4">
+                             <p className="text-sm text-gray-600 font-medium italic">"{card.answer}"</p>
+                           </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+              </div>
+            </ScrollArea>
+          </SheetContent>
+        </Sheet>
       </div>
     </div>
   )

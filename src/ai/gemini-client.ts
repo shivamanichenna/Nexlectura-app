@@ -34,3 +34,33 @@ export async function generateTextOutput(prompt: string): Promise<string> {
   const result = await geminiModel.generateContent(prompt);
   return result.response.text();
 }
+
+/**
+ * Helper to transcribe audio from a Blob in the browser.
+ */
+export async function generateTranscriptionFromBlob(audioBlob: Blob, prompt: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      try {
+        const base64Data = (reader.result as string).split(',')[1];
+        
+        const result = await geminiModel.generateContent([
+          prompt,
+          {
+            inlineData: {
+              data: base64Data,
+              mimeType: audioBlob.type,
+            },
+          },
+        ]);
+        
+        resolve(result.response.text());
+      } catch (error) {
+        reject(error);
+      }
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(audioBlob);
+  });
+}
