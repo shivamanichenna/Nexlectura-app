@@ -44,20 +44,28 @@ export async function generateTranscriptionFromBlob(audioBlob: Blob, prompt: str
     reader.onloadend = async () => {
       try {
         const base64Data = (reader.result as string).split(',')[1];
+        let mimeType = audioBlob.type;
         
+        // Fallback for missing MIME types (common on Windows for MP3/WAV)
+        if (!mimeType) {
+          const fileName = (audioBlob as any).name || '';
+          mimeType = fileName.endsWith('.wav') ? 'audio/wav' : 'audio/mp3';
+        }
+
         const result = await geminiModel.generateContent([
           prompt,
           {
             inlineData: {
               data: base64Data,
-              mimeType: audioBlob.type,
+              mimeType: mimeType,
             },
           },
         ]);
         
         resolve(result.response.text());
-      } catch (error) {
-        reject(error);
+      } catch (error: any) {
+        console.error("Gemini Transcription Error:", error);
+        reject(new Error("Failed analyzing audio: " + error.message));
       }
     };
     reader.onerror = reject;
