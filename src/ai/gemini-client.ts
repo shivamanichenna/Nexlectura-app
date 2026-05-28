@@ -9,7 +9,7 @@ const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 
 const genAI = new GoogleGenerativeAI(API_KEY);
 
-export const geminiModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+export const geminiModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
 
 /**
  * Helper to call Gemini with a structured JSON output schema.
