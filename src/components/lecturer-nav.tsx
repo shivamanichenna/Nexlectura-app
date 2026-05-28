@@ -2,12 +2,12 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, GraduationCap, Sparkles, Mail, User } from "lucide-react"
+import { LayoutDashboard, GraduationCap, Sparkles, Mail, User, BookOpen } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
   { name: "Dashboard", icon: LayoutDashboard, path: "/lecturer" },
-  { name: "Classes", icon: GraduationCap, path: "/lecturer/classes" },
+  { name: "Library", icon: BookOpen, path: "/lecturer/library" },
   { name: "AI Lab", icon: Sparkles, path: "/lecturer/ai-assistant", isSpecial: true },
   { name: "Inbox", icon: Mail, path: "/lecturer/notifications" },
   { name: "Profile", icon: User, path: "/profile" },
