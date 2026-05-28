@@ -9,7 +9,7 @@ const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 
 const genAI = new GoogleGenerativeAI(API_KEY);
 
-export const geminiModel = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+export const geminiModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 /**
  * Helper to call Gemini with a structured JSON output schema.
@@ -65,7 +65,11 @@ export async function generateTranscriptionFromBlob(audioBlob: Blob, prompt: str
         resolve(result.response.text());
       } catch (error: any) {
         console.error("Gemini Transcription Error:", error);
-        reject(new Error("Failed analyzing audio: " + error.message));
+        if (error.message && error.message.includes('429')) {
+          reject(new Error("Rate Limit Exceeded. Please wait a minute before trying again."));
+        } else {
+          reject(new Error("Failed analyzing audio: " + error.message));
+        }
       }
     };
     reader.onerror = reject;
